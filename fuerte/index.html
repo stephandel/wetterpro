@@ -726,7 +726,7 @@ svg { display:block; }
 .wk-basis-bild { image-rendering: auto; }
 
 /* Quellen, Hinweise, Legende */
-.wk-quelle { position: absolute; left: 6px; bottom: 4px; z-index: 500; font-size: 10px; letter-spacing: .04em; color: rgba(255,255,255,.85); text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; }
+.wk-quelle { position: absolute; left: 6px; right: 6px; bottom: 4px; z-index: 500; font-size: 10px; line-height: 1.25; letter-spacing: .04em; color: rgba(255,255,255,.85); text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; }
 .wk-hinweis { position: absolute; left: 12px; right: 12px; bottom: 22px; z-index: 500; text-align: center; font-size: 12.5px; line-height: 1.4; color: #fff; padding: 6px 10px; background: rgba(11,26,46,.8); pointer-events: none; }
 .wk-legende { position: absolute; left: 6px; top: 6px; z-index: 500; font-size: 10.5px; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; display: flex; align-items: center; gap: 6px; }
 .wk-legende i { display: block; width: 110px; height: 8px; border: 0.5px solid rgba(0,0,0,.5); }
@@ -4237,7 +4237,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
 /* ===========================================================================
    WetterKarte – gemeinsamer Kartenbaustein der WetterPro-Apps.
    Zwei Modi:
-     „karten"  – Reliefkarte (Esri) mit Wetter-Marken, Temperatur-/Niederschlags-/Wind-/Wolken-/Luftdruck-Fläche
+     „karten"  – Reliefkarte (OpenTopoMap) mit Wetter-Marken, Temperatur-/Niederschlags-/Wind-/Wolken-/Luftdruck-Fläche
                  aus einem Open-Meteo-Gitter, Zeitleiste über alle Stunden der nächsten 7 Tage.
      „radsat"  – Regen-Radar (RainViewer, dazu EUMETSAT-Niederschlag), Satellitenbild in Farbe und Infrarot schwarz-weiß (EUMETSAT),
                  Zeitleiste über die letzten 2 Stunden in 10-Minuten-Schritten.
@@ -4250,9 +4250,10 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
   'use strict';
 
   // ---------- Quellen ----------
-  var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
-  var KACHEL_RELIEF = ESRI + 'World_Physical_Map/MapServer/tile/{z}/{y}/{x}';
-  var KACHEL_GRENZEN = ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  // Grundkarte: OpenTopoMap (frei nutzbar, CC-BY-SA, mit Grenzen und Ortsnamen; bis 14.10.2026 Esri Physical Map, die ohne Schlüssel nicht erlaubt ist).
+  // CARTO Voyager wäre die Alternative gewesen, liefert aber ohne API-Schlüssel nur noch Kacheln „API KEY REQUIRED".
+  var KACHEL_RELIEF = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+  var KACHEL_QUELLE = '© OpenStreetMap-Mitwirkende, SRTM © OpenTopoMap (CC-BY-SA)';
   var WMS = 'https://view.eumetsat.int/geoserver/wms';
   var RAINVIEWER = 'https://api.rainviewer.com/public/weather-maps.json';
   var METEO = 'https://api.open-meteo.com/v1/forecast';
@@ -4464,7 +4465,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     }
     function merken() { merk(MERK, { wetter: an.wetter, flaeche: an.flaeche }); }
 
-    var el = {}, map, basis, grenzen, flaeche = null, marken = {}, gitter = null, gitterVersprechen = null, gitterSchluessel = '';
+    var el = {}, map, basis, flaeche = null, marken = {}, gitter = null, gitterVersprechen = null, gitterSchluessel = '';
     var idx = 0, film = false, filmUhr = null, ladeUhr = null, abgebaut = false;
     var frames = [], frameLayer = {}, rainviewer = null, snap = null, hinweisText = '';
     var canvas = document.createElement('canvas'); canvas.width = 720; canvas.height = 540;
@@ -4497,7 +4498,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     el.karte = wurzel.querySelector('.wk-leaflet'); el.legende = wurzel.querySelector('.wk-legende'); el.legA = wurzel.querySelector('.wk-leg-a'); el.legB = wurzel.querySelector('.wk-leg-b');
     el.titel = wurzel.querySelector('.wk-titel'); el.lade = wurzel.querySelector('.wk-lade'); el.hinweis = wurzel.querySelector('.wk-hinweis'); el.quelle = wurzel.querySelector('.wk-quelle');
     el.range = wurzel.querySelector('.wk-range'); el.ticks = wurzel.querySelector('.wk-ticks'); el.tage = wurzel.querySelector('.wk-tage'); el.play = wurzel.querySelector('.wk-play');
-    el.quelle.textContent = MODUS === 'karten' ? 'Esri · Open-Meteo' : 'Esri · Open-Meteo · RainViewer · EUMETSAT';
+    el.quelle.textContent = KACHEL_QUELLE + (MODUS === 'karten' ? ' · Open-Meteo' : ' · Open-Meteo · RainViewer · EUMETSAT');
 
     // ---------- Karte ----------
     // zoomAnimation aus: die animierte Zoomstufe blieb im Test hängen (kein transitionend), ohne Animation zoomt es zuverlässig
@@ -4508,8 +4509,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     // Rad/Sat etwas weiter weg, damit man Wolkenfelder als Ganzes sieht.
     var START_ZOOM = MODUS === 'karten' ? 8.3 : 7.3;
     if (!OFFLINE) {
-      basis = L.tileLayer(KACHEL_RELIEF, { maxNativeZoom: 8, maxZoom: 10, zIndex: 1, crossOrigin: false }).addTo(map);
-      grenzen = L.tileLayer(KACHEL_GRENZEN, { maxNativeZoom: 10, maxZoom: 10, zIndex: 5, opacity: 0.9 }).addTo(map);
+      basis = L.tileLayer(KACHEL_RELIEF, { subdomains: 'abc', maxZoom: 10, zIndex: 1, crossOrigin: false }).addTo(map);
       map.setView([ort.lat, ort.lon], START_ZOOM, { animate: false });
     }
     var markenEbene = L.layerGroup().addTo(map);
@@ -4927,7 +4927,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
       var alt = frames[frames.length - 1]; framesBauen();
-      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis && l !== grenzen) map.removeLayer(l); }); anzeigen(true); }
+      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis) map.removeLayer(l); }); anzeigen(true); }
     }, 5 * 60000);
 
     return {
