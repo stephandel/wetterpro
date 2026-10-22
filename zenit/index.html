@@ -374,7 +374,9 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
 .wk-tk svg { width: 18px; height: 18px; display: block; }
 .wk-tk:disabled { opacity: .35; }
 .wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
-.wk-range { width: 100%; margin: 0; display: block; accent-color: #fff; height: 28px; }
+/* Trefferfläche 44 px (B7, 22.10.2026), Optik bleibt schlank: negative Ränder halten den Platz bei 28 px; die Spur sitzt
+   mittig, oben endet die Fläche am Rand des Zeitbands, unten reicht sie über die Stundenmarken (die lassen Tipps durch) */
+.wk-range { width: 100%; margin: -4px 0 -12px; display: block; accent-color: #fff; height: 44px; }
 .wk-ticks { position: absolute; left: 10px; right: 10px; bottom: 16px; height: 14px; font-size: 10.5px; color: var(--wk-still); pointer-events: none; }
 .wk-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .wk-ticks span::before { content: ""; display: block; width: 0.5px; height: 4px; background: var(--wk-still); margin: 0 auto 1px; }
@@ -393,7 +395,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
 .wk-marke .wk-w svg { width: 34px; height: 34px; display: block; filter: drop-shadow(0 0 2px rgba(0,0,0,.9)); }
 .wk-marke .wk-w b { font-size: 14px; font-weight: 500; }
 .wk-marke.is-hier i { width: 12px; height: 12px; left: -6px; top: -6px; background: var(--wk-akzent); box-shadow: 0 0 0 3px rgba(255,214,51,.3); }
-.wk-marke.is-hier .wk-name { color: var(--wk-akzent); font-weight: 600; font-size: 13.5px; }
+.wk-marke.is-hier .wk-name { color: #fff; font-weight: 600; font-size: 13.5px; top: -11px; padding: 1px 6px; border-radius: 6px; background: rgba(0,0,0,.62); text-shadow: none; }   /* Pille: auf jedem Kartengrund mind. 4,5:1 (zweite Meinung A32; vorher Akzentblau auf Kartenblau) */
 .wk-marke.is-hier .wk-w { top: -38px; }
 .wk-marke.is-hier .wk-w svg { width: 40px; height: 40px; }
 .wk-marke.is-hier .wk-w b { font-size: 16px; }
@@ -415,6 +417,36 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
 .wk .leaflet-control-attribution { display: none; }
 .wk .leaflet-marker-icon { transition: none; }
 .wk .leaflet-image-layer { pointer-events: none; }
+
+/* Vollbild-Blatt (A32, 21.10.2026): ⤢ unten in der Ebenenleiste legt die Karte über den ganzen Bildschirm.
+   Fest an alle vier Ränder geheftet, Safe Areas als Innenabstand, Kopf mit „Fertig“ (44 px). z-index 90 wie beim Meteogramm.
+   !important, weil Apps den Behälter mit eigenen Regeln gestalten (ID-Selektoren, --wk-hoehe, Eckenradius). */
+.wk {
+  --wk-fertig: var(--wk-akzent);            /* Farbe von „Fertig“; Apps mit hellem Grund setzen hier ihre Textakzentfarbe */
+}
+.wk.wk-vollbild { position: fixed !important; inset: 0 !important; z-index: 90 !important; width: auto !important; height: auto !important; min-height: 0 !important; max-width: none !important;
+  margin: 0 !important; border: 0 !important; border-radius: 0 !important; overflow: hidden !important; background: var(--wk-zeit);
+  padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px) !important; animation: wk-vb-auf .25s ease-out; }
+.wk-vollbild .wk-zeit { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+@keyframes wk-vb-auf { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .wk.wk-vollbild { animation: none; } }
+.wk-vb-kopf { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: calc(44px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 4px 0 10px; background: var(--wk-zeit); border-bottom: 0.5px solid var(--wk-rand); }
+.wk-vb-kopf[hidden] { display: none; }
+.wk-vb-titel { min-width: 0; font-size: 15px; font-weight: 600; color: var(--wk-still); }
+.wk-vb-wechsel { display: flex; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.wk-vb-wechsel::-webkit-scrollbar { display: none; }
+.wk-vb-chip { flex: none; min-height: 44px; padding: 0 14px; border: 0.5px solid var(--wk-rand); border-radius: 22px; background: none; color: var(--wk-text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wk-vb-chip[aria-checked="true"] { background: var(--wk-leiste-an); border-color: transparent; font-weight: 600; }
+.wk-vb-fertig { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border: 0; background: none; color: var(--wk-fertig); font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wk-vb-fertig:active, .wk-vb-chip:active { opacity: .6; }
+.wk-vb-fertig:focus-visible, .wk-vb-chip:focus-visible { outline: 2px solid var(--wk-akzent); outline-offset: -2px; }
+/* Niedriges Blatt (iPhone quer): Ebenenleiste zweispaltig, damit alle Knöpfe ohne Scrollen sichtbar bleiben (zweite Meinung A32).
+   width !important, weil Apps die Leiste per ID-Selektor auf eine Knopfbreite setzen. */
+@media (max-height: 500px) {
+  .wk-vollbild .wk-leiste { display: grid; grid-template-columns: repeat(2, auto); align-content: start; width: auto !important; overflow-y: auto; }
+  .wk-vollbild .wk-trenner { display: none; }
+}
 
 /* ---- css/karten.css ---- */
 /* Zenit – Bereiche „Karten" und „Rad/Sat": der gemeinsame Kartenbaustein (.wk) im Zenit-Kleid.
@@ -2163,11 +2195,17 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
                  Zeitleiste über die letzten 2 Stunden in 10-Minuten-Schritten.
    Braucht Leaflet (global `L`). Ohne Netz (offline) zeigt er die gespeicherte Ansicht aus snapshot/karte.json.
 
-   var k = WetterKarte.einbauen({ ziel, modus, ort, orte, offset, symbol(code, istTag), offline, snapshot, merk(k, v), beiZeit(text) });
-   k.zeigeOrt(ort, orte); k.sichtbar(); k.verlassen(); k.abbauen();
+   var k = WetterKarte.einbauen({ ziel, modus, ort, orte, offset, symbol(code, istTag, werte), offline, snapshot, merk(k, v), beiZeit(text),
+                                  vollbildKnopf, vollbildStart, vollbildTitel, beiVollbildZu(), zurueckGeste, wechsel: [{ id, name }], aktiv, beiWechsel(id) });
+   k.zeigeOrt(ort, orte); k.sichtbar(); k.verlassen(); k.vollbild(an); k.abbauen();
+   Vollbild (A32, 21.10.2026): ⤢ unten in der Ebenenleiste legt die Karte als Blatt über den ganzen Bildschirm, „Fertig“, Esc und
+   Zurück schließen. `wechsel` zeigt im Blatt-Kopf Umschalter (z. B. „Radar & Satellit | Karten“), die Wahl meldet beiWechsel(id).
    =========================================================================== */
 (function (global) {
   'use strict';
+
+  // Neu geladen, während ein Vollbild-Blatt offen war (A32): der Verlaufseintrag gehört zu keinem Blatt mehr
+  try { if (global.history && history.state && history.state.wpVollbild === 'wk') history.replaceState(null, ''); } catch (e) { }
 
   // ---------- Quellen ----------
   // Grundkarte: OpenTopoMap (frei nutzbar, CC-BY-SA, mit Grenzen und Ortsnamen; bis 14.10.2026 Esri Physical Map, die ohne Schlüssel nicht erlaubt ist).
@@ -2177,7 +2215,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
   var WMS = 'https://view.eumetsat.int/geoserver/wms';
   var RAINVIEWER = 'https://api.rainviewer.com/public/weather-maps.json';
   var METEO = 'https://api.open-meteo.com/v1/forecast';
-  var FELDER = 'temperature_2m,precipitation,weather_code,is_day,wind_speed_10m,wind_direction_10m,cloud_cover,pressure_msl';
+  var FELDER = 'temperature_2m,precipitation,weather_code,is_day,wind_speed_10m,wind_direction_10m,cloud_cover,pressure_msl,sunshine_duration';
   var NX = 7, NY = 6;                       // Gitterpunkte je Richtung
   var TAGE = 7;
   var SCHRITT = 10, VERZUG = 50, BILDER = 13; // Rad/Sat: Minuten, Minuten, Anzahl
@@ -2233,6 +2271,8 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
     satregen: ic('<rect x="9.8" y="4.8" width="4.4" height="4.4" rx=".8" transform="rotate(45 12 7)"/><rect x="2.5" y="5.4" width="5" height="3.2" rx=".7"/><rect x="16.5" y="5.4" width="5" height="3.2" rx=".7"/><path d="M7.5 7h2.3M14.2 7h2.3"/><path d="M7.5 14.5l-1.6 4.5M12 14.5l-1.6 4.5M16.5 14.5l-1.6 4.5"/>'),
     plus:     ic('<circle cx="11" cy="11" r="7"/><path d="M16 16l5 5M11 8v6M8 11h6"/>'),
     minus:    ic('<circle cx="11" cy="11" r="7"/><path d="M16 16l5 5M8 11h6"/>'),
+    voll:     ic('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+    vollaus:  ic('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
     play:     '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2l11 6-11 6z"/></svg>',
     pause:    '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>',
     anfang:   '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h2v12H2zM14 2 5 8l9 6z"/></svg>',
@@ -2273,7 +2313,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
     var liste = Array.isArray(antwort) ? antwort : [antwort];
     if (!liste.length || !liste[0].hourly) return null;
     var nx = lons.length, ny = lats.length, zeiten = liste[0].hourly.time, nt = zeiten.length;
-    var namen = { temp: 'temperature_2m', regen: 'precipitation', code: 'weather_code', tag: 'is_day', wind: 'wind_speed_10m', dir: 'wind_direction_10m', wolken: 'cloud_cover', druck: 'pressure_msl' };
+    var namen = { temp: 'temperature_2m', regen: 'precipitation', code: 'weather_code', tag: 'is_day', wind: 'wind_speed_10m', dir: 'wind_direction_10m', wolken: 'cloud_cover', druck: 'pressure_msl', sonne: 'sunshine_duration' };
     var felder = {}, k;
     for (k in namen) felder[k] = new Float32Array(nx * ny * nt);
     for (var p = 0; p < liste.length && p < nx * ny; p++) {
@@ -2370,6 +2410,10 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
     var merk = cfg.merk || function () { return null; };
     var beiZeit = cfg.beiZeit || function () {};
     var MERK = 'wk-' + MODUS;
+    var VOLLBILD_KNOPF = cfg.vollbildKnopf !== false, VOLLBILD_START = cfg.vollbildStart === true, ZURUECK_GESTE = cfg.zurueckGeste !== false;
+    var VOLLBILD_TITEL = cfg.vollbildTitel || (MODUS === 'karten' ? 'Karten' : 'Radar und Satellit');
+    var BEI_VOLLBILD_ZU = typeof cfg.beiVollbildZu === 'function' ? cfg.beiVollbildZu : null;
+    var WECHSEL = Array.isArray(cfg.wechsel) && cfg.wechsel.length > 1 ? cfg.wechsel : null, BEI_WECHSEL = typeof cfg.beiWechsel === 'function' ? cfg.beiWechsel : null;
 
     // Ebenen je Modus. `flaeche` = genau eine davon gleichzeitig; `wetter` schaltet die Marken.
     var EBENEN = MODUS === 'karten'
@@ -2393,7 +2437,14 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
 
     // ---------- Oberfläche ----------
     wurzel.classList.add('wk');
+    function escH(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     wurzel.innerHTML =
+      // Kopf des Vollbild-Blatts (A32): Umschalter oder Titel links, „Fertig“ rechts; außerhalb des Blatts versteckt
+      '<div class="wk-vb-kopf" hidden>' +
+        (WECHSEL ? '<div class="wk-vb-wechsel" role="radiogroup" aria-label="Ansicht">' + WECHSEL.map(function (w) {
+          return '<button type="button" class="wk-vb-chip" role="radio" data-wechsel="' + escH(w.id) + '" aria-checked="' + (w.id === cfg.aktiv) + '">' + escH(w.name) + '</button>'; }).join('') + '</div>'
+          : '<span class="wk-vb-titel">' + escH(VOLLBILD_TITEL) + '</span>') +
+        '<button type="button" class="wk-vb-fertig">Fertig</button></div>' +
       '<div class="wk-oben">' +
         '<div class="wk-karte"><div class="wk-leaflet"></div>' +
           '<div class="wk-legende" hidden><span class="wk-leg-a"></span><i></i><span class="wk-leg-b"></span></div>' +
@@ -2407,6 +2458,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
           '<div class="wk-trenner"></div>' +
           '<button type="button" class="wk-knopf" data-zoom="1" aria-label="Näher" title="Näher">' + ICONS.plus + '</button>' +
           '<button type="button" class="wk-knopf" data-zoom="-1" aria-label="Weiter" title="Weiter">' + ICONS.minus + '</button>' +
+          (VOLLBILD_KNOPF ? '<button type="button" class="wk-knopf wk-voll" aria-pressed="false" aria-label="Vollbild" title="Vollbild: über den ganzen Bildschirm">' + ICONS.voll + '</button>' : '') +
         '</div>' +
       '</div>' +
       '<div class="wk-zeit"><div class="wk-regler">' +
@@ -2762,7 +2814,9 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
       if (!gitter || !frames.length) return '';
       var temp = wertBi(gitter, 'temp', k.lat, k.lon, t), code = wertNah(gitter, 'code', k.lat, k.lon, t), tag = wertNah(gitter, 'tag', k.lat, k.lon, t);
       if (isNaN(temp) || isNaN(code)) return '';
-      return '<div class="wk-w">' + symbol(Math.round(code), tag >= 0.5) + '<b>' + Math.round(temp) + '°C</b></div>';
+      // dritter Wert für Apps, die das Symbol nach Regenmenge, Sonnenscheindauer und Bewölkung statt nach rohem Wettercode wählen (NaN = fehlt, z. B. im Snapshot)
+      var w = { regen: wertNah(gitter, 'regen', k.lat, k.lon, t), sonne: wertNah(gitter, 'sonne', k.lat, k.lon, t), wolken: wertNah(gitter, 'wolken', k.lat, k.lon, t) };
+      return '<div class="wk-w">' + symbol(Math.round(code), tag >= 0.5, w) + '<b>' + Math.round(temp) + '°C</b></div>';
     }
 
     // ---------- Anzeigen ----------
@@ -2775,7 +2829,9 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
       else { if (ebeneGewechselt) { for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar'].forEach(function (k) { if (f[k]) f[k].setOpacity(0); }); } } bildebenenZeigen(); if (ebeneGewechselt) markenSetzen(); }
     }
     function lade(an2) { clearTimeout(ladeUhr); if (an2) el.lade.hidden = false; else ladeUhr = setTimeout(function () { el.lade.hidden = true; }, 150); }
-    function hinweis(text) { hinweisText = text; el.hinweis.hidden = !text; el.hinweis.textContent = text; }
+    // Der Hinweis steht über der Quellenzeile; die kann zweizeilig sein (zweite Meinung A32: vorher überlappten beide)
+    function hinweisSetzen() { if (!el.hinweis.hidden) el.hinweis.style.bottom = (el.quelle.offsetHeight + 8) + 'px'; }
+    function hinweis(text) { hinweisText = text; el.hinweis.hidden = !text; el.hinweis.textContent = text; hinweisSetzen(); }
 
     // Ohne Netz: das gespeicherte Bild soll die ganze Fläche ausfüllen (wie „cover"), zoomen darf man näher heran,
     // aber nicht weiter weg als bis zum Bildrand. Wird die Fläche anders (Querformat), rechnen wir neu.
@@ -2799,11 +2855,68 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
         b.disabled = +b.dataset.zoom > 0 ? z >= map.getMaxZoom() - 0.01 : z <= map.getMinZoom() + 0.01;
       });
     }
+    // ---------- Vollbild-Blatt (A32) ----------
+    // Wie beim Meteogramm-Baustein: Klasse wk-vollbild (CSS heftet die Karte an alle Ränder), role="dialog", Rest der Seite inert,
+    // ein Verlaufseintrag, damit Zurück das Blatt schließt. Danach rechnet Leaflet die neue Größe nach.
+    // zurueck: so viele history.back() sind unterwegs; ihr spätes popstate darf ein inzwischen neu geöffnetes Blatt nicht schließen
+    var vollbild = false, vb = { gesperrt: [], overflow: '', gepusht: false, zurueck: 0 };
+    function vollbildSetzen(an, ausVerlauf) {
+      an = !!an;
+      if (an === vollbild || abgebaut) return;
+      vollbild = an;
+      wurzel.classList.toggle('wk-vollbild', an);
+      var b = wurzel.querySelector('.wk-voll'), kopf = wurzel.querySelector('.wk-vb-kopf');
+      if (b) { b.innerHTML = an ? ICONS.vollaus : ICONS.voll; b.setAttribute('aria-pressed', String(an)); b.setAttribute('aria-label', an ? 'Vollbild beenden' : 'Vollbild'); }
+      kopf.hidden = !an;
+      if (an) {
+        wurzel.setAttribute('role', 'dialog'); wurzel.setAttribute('aria-modal', 'true'); wurzel.setAttribute('aria-label', VOLLBILD_TITEL + ' im Vollbild');
+        seiteSperren(true);
+        // Steht der Verlauf schon auf einem Karten-Eintrag (Umschalter im Blatt baut die Karte neu), wird er weiterbenutzt
+        if (ZURUECK_GESTE) { try { if (!vb.zurueck && history.state && history.state.wpVollbild === 'wk') vb.gepusht = true; else { history.pushState({ wpVollbild: 'wk' }, ''); vb.gepusht = true; } } catch (e) { } }
+        wurzel.querySelector('.wk-vb-fertig').focus({ preventScroll: true });
+      } else {
+        wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
+        seiteSperren(false);
+        if (vb.gepusht) { vb.gepusht = false; if (!ausVerlauf && history.state && history.state.wpVollbild === 'wk') { try { vb.zurueck++; history.back(); } catch (e) { vb.zurueck--; } } }
+        if (b) b.focus({ preventScroll: true });
+      }
+      groesseGeaendert(); setTimeout(groesseGeaendert, 280);   // nach der Einblendung (250 ms) noch einmal messen
+      if (!an && BEI_VOLLBILD_ZU) { try { BEI_VOLLBILD_ZU(); } catch (e) { } }
+    }
+    function seiteSperren(an) {
+      if (an) {
+        vb.gesperrt = [];
+        for (var k = wurzel; k && k !== document.body && k.parentNode; k = k.parentNode) {
+          Array.prototype.forEach.call(k.parentNode.children, function (g) {
+            if (g === k || g.hasAttribute('inert') || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(g.tagName)) return;
+            g.setAttribute('inert', ''); vb.gesperrt.push(g);
+          });
+        }
+        vb.overflow = document.documentElement.style.overflow; document.documentElement.style.overflow = 'hidden';
+      } else {
+        vb.gesperrt.forEach(function (g) { g.removeAttribute('inert'); }); vb.gesperrt = [];
+        document.documentElement.style.overflow = vb.overflow || '';
+      }
+    }
+    function vbTaste(ev) { if (vollbild && ev.key === 'Escape' && !ev.defaultPrevented) { ev.preventDefault(); vollbildSetzen(false); } }
+    function vbZurueck() {
+      // Das eigene Zurück von „Fertig“ kommt an; inzwischen neu geöffnet: Eintrag für das Blatt neu anlegen (wie im Meteogramm-Baustein)
+      if (vb.zurueck > 0) { vb.zurueck--; if (!vb.zurueck && vollbild && vb.gepusht && !(history.state && history.state.wpVollbild === 'wk')) { try { history.pushState({ wpVollbild: 'wk' }, ''); } catch (e) { } } return; }
+      if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); }
+    }
+    document.addEventListener('keydown', vbTaste);
+    global.addEventListener('popstate', vbZurueck);
+    if (wurzel.querySelector('.wk-voll')) wurzel.querySelector('.wk-voll').addEventListener('click', function () { vollbildSetzen(!vollbild); });
+    wurzel.querySelector('.wk-vb-fertig').addEventListener('click', function () { vollbildSetzen(false); });
+    wurzel.querySelectorAll('[data-wechsel]').forEach(function (c) {
+      c.addEventListener('click', function () { if (c.getAttribute('aria-checked') !== 'true' && BEI_WECHSEL) BEI_WECHSEL(c.dataset.wechsel); });
+    });
+
     function groesseGeaendert() {
       if (!map) return;
       map.invalidateSize({ animate: false });
       if (OFFLINE) offlineAnsicht(false);
-      ticks();
+      ticks(); hinweisSetzen();
     }
     window.addEventListener('resize', groesseGeaendert);
     window.addEventListener('orientationchange', function () { setTimeout(groesseGeaendert, 300); });
@@ -2844,6 +2957,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
       }
     }
     start();
+    if (VOLLBILD_START) vollbildSetzen(true);
     var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
       var alt = frames[frames.length - 1]; framesBauen();
@@ -2860,7 +2974,13 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
       setzeOffset: function (s) { offset = s || 0; ticks(); if (frames.length) anzeigen(false); },
       sichtbar: function () { map.invalidateSize(); ticks(); markenSetzen(); },
       verlassen: function () { filmStopp(); },
-      abbauen: function () { window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+      vollbild: function (an) { vollbildSetzen(an); },
+      // Offenes Blatt: Sperre aufheben; der Verlaufseintrag bleibt und wird von einem neuen Blatt weiterbenutzt (Umschalter im Blatt)
+      abbauen: function () {
+        if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
+        document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
+        wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
+        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 
