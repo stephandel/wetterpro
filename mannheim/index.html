@@ -1223,18 +1223,28 @@ a.eintrag > span { color: var(--akzent); }
 .pane[data-pane="webcams"] { padding-top: var(--s3); }
 .wc-oben .hinweis { padding-top: 0; }
 .wc-oben .hinweis .ic { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; }
-.wc-galerie { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); margin: 0 var(--rand); }
-.wc-kachel { display: flex; flex-direction: column; gap: 2px; text-align: left; min-height: var(--tap); padding: var(--s2); background: var(--bg-2); border-radius: var(--r-kachel); transition: opacity var(--dauer) var(--ease), transform var(--dauer) var(--ease); }
+/* Leiste über der Galerie: Sortierung (Neueste · Nähe · A–Z) und Umschalter große Bilder */
+.wc-leiste { display: flex; align-items: center; gap: var(--s2); margin: 0 var(--s2) var(--s2); }
+.wc-leiste .segment { flex: 1; }
+.wc-gross { flex: none; width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: var(--r-button); background: var(--fuellung); color: var(--label); transition: background-color var(--dauer) var(--ease); }
+.wc-gross[aria-pressed="true"] { background: var(--segment-an, var(--bg-2)); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
+.wc-gross .ic { width: 22px; height: 22px; }
+/* Galerie: schmale Ränder und Fugen, das Bild füllt die ganze Kachel, Text liegt auf dem Bild */
+.wc-galerie { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; margin: 0 var(--s2); }
+.wc-galerie.gross { grid-template-columns: 1fr; }
+.wc-kachel { display: block; text-align: left; min-height: var(--tap); padding: 0; border-radius: var(--r-kachel); transition: opacity var(--dauer) var(--ease), transform var(--dauer) var(--ease); }
 .wc-kachel:active { opacity: .6; transform: scale(.97); }
-.wc-kachel.skeleton { aspect-ratio: 4 / 3.6; }
-.wc-rahmen { position: relative; display: block; aspect-ratio: 4 / 3; border-radius: var(--r-button); overflow: hidden; background: var(--fuellung); margin-bottom: var(--s1); }
+.wc-kachel.skeleton { aspect-ratio: 4 / 3; }
+.wc-rahmen { position: relative; display: block; aspect-ratio: 4 / 3; border-radius: var(--r-kachel); overflow: hidden; background: var(--fuellung); }
 .wc-rahmen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wc-unten { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s2); padding: 22px var(--s2) var(--s2); background: linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,.35) 60%, rgba(0,0,0,0)); color: #fff; }
+.wc-name { flex: 1; min-width: 0; font-size: var(--fs-subhead); font-weight: 600; line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,.6); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.wc-km { display: block; font-size: var(--fs-caption); font-weight: 500; opacity: .85; font-variant-numeric: tabular-nums; }
 .wc-band, .wm-band { display: inline-flex; align-items: center; gap: 5px; color: #fff; background: rgba(0,0,0,.62); font-size: var(--fs-caption); font-weight: 500; font-variant-numeric: tabular-nums; }
-.wc-band { position: absolute; left: var(--s1); bottom: var(--s1); padding: 2px var(--s2); border-radius: var(--r-chip); }
+.wc-band { flex: none; padding: 2px var(--s2); border-radius: var(--r-chip); white-space: nowrap; }
 .wc-schloss { position: absolute; right: var(--s1); top: var(--s1); width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: rgba(0,0,0,.62); color: #fff; }
 .wc-schloss .ic { width: 14px; height: 14px; }
-.wc-name { font-size: var(--fs-subhead); font-weight: 600; line-height: 1.25; padding: 0 var(--s1); }
-.wc-betreiber { font-size: var(--fs-caption); color: var(--label-2); padding: 0 var(--s1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wc-galerie.gross .wc-name { font-size: var(--fs-body); }
 .wc-links .eintrag > span .ic { width: 17px; height: 17px; }
 
 /* Detail-Blatt */
@@ -1335,6 +1345,49 @@ a.eintrag > span { color: var(--akzent); }
 .privat-meldung { margin: var(--s3) var(--rand) 0; font-size: var(--fs-subhead); color: var(--label); min-height: 1.4em; }
 .privat-meldung:empty { display: none; }
 .zeile-liste .eintrag .ic.klein { color: var(--akzent); }
+
+/* Paket L: Lieblingskamera als Band im Reiter Wetter */
+#wetter-liebling:empty { display: none; }   /* der Reiter ist eine Flex-Spalte mit Abstand und Rand: leer keine Lücke */
+.li-band { display: block; width: 100%; padding: 0; text-align: left; border-radius: var(--r-kachel); transition: opacity var(--dauer) var(--ease), transform var(--dauer) var(--ease); }
+button.li-band:active { opacity: .6; transform: scale(.98); }
+.li-skeleton { height: 150px; }
+.li-band .li-rahmen { aspect-ratio: auto; height: 150px; }
+.li-rahmen.is-laden img { opacity: 0; }
+.li-rahmen img { transition: opacity var(--dauer) var(--ease); }
+.li-rahmen.ohne-bild { background: var(--fuellung); }
+.eintrag[aria-disabled="true"] { color: var(--label-2); }
+@media (prefers-reduced-motion: reduce) { .li-band, .li-rahmen img { transition: none; } }
+/* Paket K: Karte (Luftbild-Chip, Bündel-Knopf der Webcam-Marker) */
+.wm-buendel { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 2px solid #fff; background: var(--akzent); color: #fff; font-size: var(--fs-subhead); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.wk .wk-knopf.wk-luftbild { flex: none; width: auto; padding: 0 var(--s3) 0 var(--s2); border-radius: var(--r-chip); display: inline-flex; align-items: center; gap: var(--s1); background: transparent; color: var(--label); font-size: var(--fs-subhead); font-weight: 500; white-space: nowrap; height: var(--tap); border: 4px solid transparent; background-clip: padding-box; }
+.wk .wk-knopf.wk-luftbild.is-on { background: var(--akzent-flaeche); color: var(--auf-akzent); }
+.wk .wk-knopf.wk-luftbild svg { width: 20px; height: 20px; }
+/* Paket W: Webcams – Wischen, Gestern, Tagesfilm, Vollbild, Aktualisieren, Jahr */
+.wc-rahmenb { position: relative; }
+.wc-vbknopf { position: absolute; right: var(--s2); top: var(--s2); width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; }
+.wc-vbknopf[hidden] { display: none; }
+.wc-vbknopf .ic { width: 22px; height: 22px; }
+.wc-nav { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-top: calc(-1 * var(--s1)); }
+.wc-nav button { flex: none; width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: var(--r-button); background: var(--fuellung); color: var(--label); }
+.wc-nav button:disabled { opacity: .35; }
+.wc-nav .ic { width: 22px; height: 22px; }
+.wc-nav-name { flex: 1; min-width: 0; text-align: center; font-size: var(--fs-footnote); color: var(--label-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.segment[data-seg="wc-ansicht"] button { font-size: var(--fs-footnote); padding: 0 2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.segment[data-seg="wc-zeitpunkt"] button, .segment[data-seg="wc-dauer"] button { font-size: var(--fs-footnote); }
+.wc-film + .segment, .segment[data-seg="wc-tempo"] + .segment { margin-top: var(--s2); }
+.wc-hinweis { margin: var(--s1) 0 0; font-size: var(--fs-footnote); color: var(--label-2); }
+.wc-stand { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--s1); margin: var(--s2) var(--s2) 0; font-size: var(--fs-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; }
+.wc-neu { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 var(--s3); border-radius: var(--r-button); color: var(--akzent); font-size: var(--fs-footnote); font-weight: 600; }
+.wc-neu:disabled { opacity: .6; }
+.wc-neu .ic { width: 18px; height: 18px; }
+.wc-neu.dreht .ic { animation: wc-dreh 1s linear infinite; }
+@keyframes wc-dreh { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wc-neu.dreht .ic { animation: none; } }
+.wc-vb { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.wc-vb-bild { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; display: block; }
+.wc-vb-zu { position: absolute; top: calc(env(safe-area-inset-top) + var(--s2)); right: calc(env(safe-area-inset-right) + var(--s2)); width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: 50%; background: rgba(60,60,60,.7); color: #fff; }
+.wc-vb-zu .ic { width: 22px; height: 22px; }
+.wc-vb-zeit { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + var(--s2)); margin: 0; text-align: center; color: #fff; font-size: var(--fs-footnote); font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgba(0,0,0,.8); pointer-events: none; }
 
 </style>
 </head>
@@ -1521,7 +1574,12 @@ a.eintrag > span { color: var(--akzent); }
     kamera:      ic('<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.2"/>'),
     schloss:     ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', 'klein'),
     warnung:     ic('<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/>'),
-    extern:      ic('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>', 'klein')
+    extern:      ic('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>', 'klein'),
+    breit:       ic('<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/>'),
+    // Webcam-Detail: Vollbild, Schließen, nächste Kamera
+    vollbild:    ic('<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>'),
+    schliessen:  ic('<path d="M18 6 6 18M6 6l12 12"/>'),
+    weiter:      ic('<path d="M9 5l7 7-7 7"/>')
   };
 })(window);
 
@@ -2127,11 +2185,17 @@ a.eintrag > span { color: var(--akzent); }
   // ---------- Einstellungen: Blatt hinter dem Zahnrad (früher Reiter „Mehr“) ----------
   // Unterblätter haben „Zurück“ zu den Einstellungen; Module hängen eigene Zeilen über WP.einstellungZeile an (Privat).
   function e(t, r, id) { return '<div class="eintrag" data-einst="' + id + '" role="button" tabindex="0"><div>' + t + '</div><span>' + (r || '') + ' ›</span></div>'; }
+  // Lieblingskamera (js/lieblingskamera.js): ohne Bildspeicher nicht tippbar
+  function lieblingEintrag() {
+    if (!WP.lieblingText) return '';
+    if (WP.worker && WP.worker.adresse()) return e('Lieblingskamera', WP.lieblingText(), 'liebling');
+    return '<div class="eintrag" aria-disabled="true"><div>Lieblingskamera</div><span>' + WP.lieblingText() + '</span></div>';
+  }
   function einstellungenBlatt() {
     var daten = WP.zustand.daten;
     var stand = daten ? new Date(daten.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr' : '–';
     var theme = THEMEN.filter(function (x) { return x.id === WP.zustand.theme; })[0] || THEMEN[0];
-    var html = '<div class="band">Ansicht</div><div class="zeile-liste">' + e('Darstellung', esc(theme.name), 'theme') + e('Mond', 'Phase, Auf- und Untergang', 'mond') + '</div>' +
+    var html = '<div class="band">Ansicht</div><div class="zeile-liste">' + e('Darstellung', esc(theme.name), 'theme') + e('Mond', 'Phase, Auf- und Untergang', 'mond') + lieblingEintrag() + '</div>' +
       '<div class="band">Orte</div><div class="zeile-liste">' + e('Orte und Favoriten', WP.zustand.orte.length + ' gespeichert', 'orte') + '</div>' +
       '<div class="band">Daten</div><div class="zeile-liste">' + e('Jetzt aktualisieren', 'Stand ' + stand, 'laden') +
       e('Wettermodell', esc(WP.modell().name), 'modell') + e('Einheiten', '°C · km/h · mm · hPa', 'einheiten') + '</div>' +
@@ -2141,6 +2205,7 @@ a.eintrag > span { color: var(--akzent); }
     var zurueck = { zurueck: einstellungenBlatt };
     var wege = {
       theme: function () { themeBlatt(zurueck); },
+      liebling: function () { WP.lieblingBlatt(zurueck); },
       mond: function () { if (WP.mondBlatt) WP.mondBlatt(WP.zustand.daten); },
       orte: function () { orteBlatt(zurueck); },
       laden: function () { WP.blattZu(); WP.laden(); },
@@ -2150,6 +2215,7 @@ a.eintrag > span { color: var(--akzent); }
       quellen: function () { quellenBlatt(zurueck); },
       ueber: function () { ueberBlatt(zurueck); }
     };
+    if (WP.lieblingNamen) WP.lieblingNamen();
     b.querySelectorAll('[data-einst]').forEach(function (z) {
       var los = function () { wege[z.dataset.einst](); };
       z.addEventListener('click', los);
@@ -2643,7 +2709,7 @@ a.eintrag > span { color: var(--akzent); }
   // ---------- Modul ----------
   WP.module.wetter = {
     zeichnen: function (pane, daten) {
-      pane.innerHTML = aktuellHtml(daten) + stundenHtml(daten) + tageHtml(daten);
+      pane.innerHTML = aktuellHtml(daten) + '<div id="wetter-liebling"></div>' + stundenHtml(daten) + tageHtml(daten);
       pane.querySelectorAll('.wx-mond[data-mond]').forEach(function (m) {
         m.addEventListener('click', function (ev) { ev.stopPropagation(); WP.mondBlatt(daten, +m.dataset.mond); });
       });
@@ -5417,6 +5483,7 @@ a.eintrag > span { color: var(--akzent); }
     var offset = cfg.offset || 0;               // Sekunden zu UTC für die Anzeige
     var symbol = cfg.symbol || function () { return ''; };
     var OFFLINE = !!cfg.offline;
+    var MAXZOOM = isFinite(cfg.maxZoom) ? +cfg.maxZoom : 10;   // Standard 10; Mannheim übergibt 17 (OpenTopoMap liefert bis 17)
     var SNAP = cfg.snapshot || 'snapshot/';
     var merk = cfg.merk || function () { return null; };
     var beiZeit = cfg.beiZeit || function () {};
@@ -5485,14 +5552,14 @@ a.eintrag > span { color: var(--akzent); }
 
     // ---------- Karte ----------
     // zoomAnimation aus: die animierte Zoomstufe blieb im Test hängen (kein transitionend), ohne Animation zoomt es zuverlässig
-    map = L.map(el.karte, { zoomControl: false, attributionControl: false, worldCopyJump: true, zoomSnap: 0.5, minZoom: 2, maxZoom: 10, tap: false, zoomAnimation: false });
+    map = L.map(el.karte, { zoomControl: false, attributionControl: false, worldCopyJump: true, zoomSnap: 0.5, minZoom: 2, maxZoom: MAXZOOM, tap: false, zoomAnimation: false });
     map.on('zoomend', function () { zoomKnoepfe(); });
     el.karte._wkMap = map;                             // für Fehlersuche im Browser erreichbar
     // Standardansicht: Nahaufnahme um den Ort (Stephans Wunsch: die Umgebung des Ortes füllt die Karte, z. B. Fuerteventura und Lanzarote oder die Rhein-Neckar-Region).
     // Rad/Sat etwas weiter weg, damit man Wolkenfelder als Ganzes sieht.
     var START_ZOOM = MODUS === 'karten' ? 8.3 : 7.3;
     if (!OFFLINE) {
-      basis = L.tileLayer(KACHEL_RELIEF, { subdomains: 'abc', maxZoom: 10, zIndex: 1, crossOrigin: false }).addTo(map);
+      basis = L.tileLayer(KACHEL_RELIEF, { subdomains: 'abc', maxZoom: MAXZOOM, zIndex: 1, crossOrigin: false }).addTo(map);
       map.setView([ort.lat, ort.lon], START_ZOOM, { animate: false });
     }
     var markenEbene = L.layerGroup().addTo(map);
@@ -5972,7 +6039,7 @@ a.eintrag > span { color: var(--akzent); }
     var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
       var alt = frames[frames.length - 1]; framesBauen();
-      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis) map.removeLayer(l); }); anzeigen(true); }
+      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis && !l.options.bleibt) map.removeLayer(l); }); anzeigen(true); }   // bleibt: fremde Grundkarten-Ebenen (z. B. Luftbild) stehen lassen
     }, 5 * 60000);
 
     return {
@@ -5999,7 +6066,7 @@ a.eintrag > span { color: var(--akzent); }
 })(window);
 
 /* ---- js/webcams.js ---- */
-/* WetterPro Mannheim – Reiter „Webcams“: Galerie, Detail (Aktuell · Film · Tag · Rückblick), weitere Webcams als Links.
+/* WetterPro Mannheim – Reiter „Webcams“: Galerie, Detail (Aktuell · Film · Tag · Rückblick · Jahr), weitere Webcams als Links.
    Die App kennt keine Kameraadressen. Liste, Bilder und Archiv kommen nur vom Bildspeicher (WP.worker):
      /webcam/kameras → { kameras: [{ id, name, kurz, lat, lon, quelle, seite, lizenz, takt, archiv, privat, live }], privat, token? }
      /webcam/status  → { kameras: [{ id, letzterErfolg, ergebnis }] }   (Alter und Ampel in der Galerie)
@@ -6012,7 +6079,8 @@ a.eintrag > span { color: var(--akzent); }
   WP.module = WP.module || {};
   var esc = function (s) { return WP.esc(s); };
 
-  var ANSICHTEN = [['aktuell', 'Aktuell'], ['film', 'Film'], ['tag', 'Tag'], ['rueck', 'Rückblick']];
+  var ANSICHTEN = [['aktuell', 'Aktuell'], ['film', 'Film'], ['tag', 'Tag'], ['rueck', 'Rückblick'], ['jahr', 'Jahr']];
+  var DAUER = [['1', '1 h'], ['6', '6 h'], ['heute', 'Heute']];   // Länge des Films
   var STUNDEN = [[2, '2 h'], [6, '6 h'], [12, '12 h'], [24, '24 h']];
   var TEMPO = [[0.5, '0,5×'], [1, '1×'], [2, '2×']];
   var NEU_MS = 2 * 60000;   // Liste und Status höchstens alle 2 Minuten neu holen
@@ -6042,9 +6110,12 @@ a.eintrag > span { color: var(--akzent); }
       if (s.ergebnis === 'fehler' || isNaN(s.ms)) return { text: s.ms ? WP.alterText(s.ms) : 'kein Bild', ampel: 'rot' };
       return { text: WP.alterText(s.ms), ampel: s.ergebnis === 'unverändert' ? (WP.ampel(s.ms, k.takt) === 'gruen' ? 'gelb' : WP.ampel(s.ms, k.takt)) : WP.ampel(s.ms, k.takt) };
     },
-    oeffnen: function (k) { detail(k); }
+    // Aus der Karte geöffnet: erst die Liste holen, damit das Wischen zur nächsten Kamera die Galerie-Reihenfolge kennt
+    oeffnen: function (k) { (letzte ? Promise.resolve() : WP.webcams.laden().then(function (d) { if (!letzte) letzte = d; })).catch(function () { }).then(function () { detail(k); }); }
   };
-  WP.bei('privat', function () { stand = { zeit: 0, v: null }; if (WP.zustand.reiter === 'webcams') zeichnen(); });
+  WP.bei('privat', function () { stand = { zeit: 0, v: null }; letzte = null; if (WP.zustand.reiter === 'webcams') zeichnen(); });   // letzte leeren: sonst wischt man von der Karte aus noch zu privaten Kameras
+  // Ortswechsel: „Nähe“ bezieht sich auf den gewählten Ort, deshalb neu sortieren
+  WP.bei('daten', function () { var gal = pane && pane.querySelector('.wc-galerie'); if (gal && letzte && einst.sort === 'naehe') galerieFuellen(gal, letzte); });
 
   // Zeiten des Bildspeichers sind Ortszeit „JJJJ-MM-TTTHH:MM“; gerechnet wird mit der Ortszeit als UTC-Zahl (wie in der Camera App)
   var wcMs = function (t) { var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(t || ''); return m ? Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]) : NaN; };
@@ -6065,7 +6136,27 @@ a.eintrag > span { color: var(--akzent); }
   }
 
   // ---------- Reiter ----------
-  var pane = null, nr = 0;
+  var pane = null, nr = 0, letzte = null;
+  // Sortierung und Kachelgröße der Galerie, gemerkt unter „webcams“
+  var SORT = [['neu', 'Neueste'], ['naehe', 'Nähe'], ['az', 'A–Z']];
+  var einst = { sort: 'neu', gross: false };
+  (function () { var g = WP.merk('webcams'); if (g && typeof g === 'object') { if (SORT.some(function (s) { return s[0] === g.sort; })) einst.sort = g.sort; einst.gross = !!g.gross; } })();
+  // Bezugspunkt für „Nähe“: der gewählte Ort, sonst Mannheim
+  function bezug() { var o = WP.zustand.ort; return (o && isFinite(o.lat) && isFinite(o.lon)) ? o : WP.MANNHEIM; }
+  // Alter in ms für „Neueste“: Live-Kameras zählen als jetzt, Kameras ohne Bild ans Ende
+  function alterMs(k, status) { if (!k.archiv) return 0; var s = status[k.id]; return (s && !isNaN(s.ms)) ? Math.max(0, Date.now() - s.ms) : Infinity; }
+  function sortiert(d) {
+    var b = bezug(), l = d.kameras.map(function (k) { return Object.assign({}, k, { km: (isFinite(k.lat) && isFinite(k.lon)) ? WP.entfernungKm(b, k) : Infinity }); });
+    var name = function (k) { return k.kurz || k.name || ''; };
+    if (einst.sort === 'naehe') l.sort(function (x, y) { return x.km - y.km || name(x).localeCompare(name(y), 'de'); });
+    else if (einst.sort === 'az') l.sort(function (x, y) { return name(x).localeCompare(name(y), 'de'); });
+    else l.sort(function (x, y) { return alterMs(x, d.status) - alterMs(y, d.status) || x.km - y.km; });
+    return l;
+  }
+  function leisteHtml() {
+    return '<div class="wc-leiste">' + seg('wc-sort', einst.sort, SORT, 'Sortierung der Webcams') +
+      '<button type="button" class="wc-gross" data-wc-gross aria-pressed="' + einst.gross + '" aria-label="Große Bilder, eine Spalte">' + WP.icons.breit + '</button></div>';
+  }
   function linksHtml(liste) {
     var l = (liste || []).filter(function (w) { return w.freigabe === 'nur-link' && /^https:\/\//.test(w.seite || ''); });
     if (!l.length) return '';
@@ -6073,13 +6164,46 @@ a.eintrag > span { color: var(--akzent); }
       return '<a class="eintrag" href="' + esc(w.seite) + '" target="_blank" rel="noopener"><div>' + esc(w.kurz || w.name) + '<small>' + esc(w.ort || '') + (w.blick ? ' · ' + esc(w.blick) : '') + '</small></div><span>' + WP.icons.extern + '</span></a>';
     }).join('') + '</div><div class="hinweis">Diese Kameras zeigt die App nicht selbst: Die Betreiber haben (noch) keine Freigabe gegeben. Der Link öffnet ihre Seite.</div>';
   }
+  // Kachel: das Bild füllt die Fläche, Name und Alter liegen unten auf dem Bild; bei „Nähe“ zusätzlich die Entfernung
   function kachelHtml(k, status) {
     var a = WP.webcams.alter(k, status);
-    return '<button type="button" class="wc-kachel" data-kamera="' + esc(k.id) + '" aria-label="' + esc(k.name) + (k.privat ? ' (privat)' : '') + '">' +
+    var km = (einst.sort === 'naehe' && isFinite(k.km)) ? '<span class="wc-km">' + esc(WP.dez(k.km, k.km < 10 ? 1 : 0) + ' km') + '</span>' : '';
+    return '<button type="button" class="wc-kachel" data-kamera="' + esc(k.id) + '" aria-label="' + esc(k.name) + (k.privat ? ' (privat)' : '') + (k.quelle ? ', ' + esc(k.quelle) : '') + '">' +
       '<span class="wc-rahmen"><img loading="lazy" decoding="async" alt="" src="' + esc(k.live || '') + '">' +
-      '<span class="wc-band"><i class="ampel ' + (a ? a.ampel : 'grau') + '"></i><span class="wc-alter">' + (a ? esc(a.text) : 'Live') + '</span></span>' +
-      (k.privat ? '<span class="wc-schloss" title="Privat">' + WP.icons.schloss + '</span>' : '') + '</span>' +
-      '<span class="wc-name">' + esc(k.kurz || k.name) + '</span><span class="wc-betreiber">' + esc(k.quelle || k.betreiber || '') + '</span></button>';
+      '<span class="wc-unten"><span class="wc-name">' + esc(k.kurz || k.name) + km + '</span>' +
+      '<span class="wc-band"><i class="ampel ' + (a ? a.ampel : 'grau') + '"></i><span class="wc-alter">' + (a ? esc(a.text) : 'Live') + '</span></span></span>' +
+      (k.privat ? '<span class="wc-schloss" title="Privat">' + WP.icons.schloss + '</span>' : '') + '</span></button>';
+  }
+  // Galerie aus den geladenen Daten füllen (auch nach Umsortieren, ohne neuen Abruf)
+  function galerieFuellen(gal, d) {
+    gal.classList.toggle('gross', einst.gross);
+    gal.innerHTML = sortiert(d).map(function (k) { return kachelHtml(k, d.status); }).join('');
+    gal.querySelectorAll('.wc-kachel').forEach(function (b) {
+      var k = d.kameras.filter(function (x) { return x.id === b.dataset.kamera; })[0];
+      b.addEventListener('click', function () { detail(k); });
+      var img = b.querySelector('img'), al = b.querySelector('.wc-alter'), am = b.querySelector('.ampel');
+      img.addEventListener('error', function () { img.remove(); b.querySelector('.wc-rahmen').classList.add('ohne-bild'); if (!WP.webcams.alter(k, d.status)) { al.textContent = 'kein Bild'; am.className = 'ampel rot'; } });
+      img.addEventListener('load', function () { if (!WP.webcams.alter(k, d.status)) { al.textContent = 'Live'; am.className = 'ampel gruen'; } });
+    });
+  }
+  // Zeile „Stand HH:MM Uhr · Aktualisieren“ unter der Galerie
+  function standZeigen(text) {
+    var st = pane && pane.querySelector('.wc-stand'); if (!st) return;
+    st.innerHTML = '<span>' + esc(text || ('Stand ' + WP.uhrMannheim(Date.now()) + ' Uhr')) + ' ·</span><button type="button" class="wc-neu" data-wc-neu aria-label="Webcams aktualisieren">' + WP.icons.auffrischen + 'Aktualisieren</button>';
+  }
+  function aktualisieren(knopf) {
+    var m = nr;
+    knopf.disabled = true; knopf.classList.add('dreht');
+    WP.webcams.laden(true).then(function (d) {
+      if (m !== nr || !pane) return;
+      letzte = d;
+      var gal = pane.querySelector('.wc-galerie');
+      if (gal) galerieFuellen(gal, d);
+      standZeigen();
+    }, function () {
+      if (m !== nr || !pane) return;
+      standZeigen('Aktualisieren hat nicht geklappt');
+    });
   }
   function zeichnen() {
     if (!pane) return;
@@ -6092,29 +6216,28 @@ a.eintrag > span { color: var(--akzent); }
         pane.innerHTML = WP.leer('Bildspeicher noch nicht eingerichtet', 'Sobald der Bildspeicher läuft, stehen hier die Webcams der Region mit Film, Tagesübersicht und Rückblick.') + links;
         return;
       }
-      pane.innerHTML = oben + '<div class="wc-galerie" aria-busy="true">' + '<div class="wc-kachel skeleton"></div><div class="wc-kachel skeleton"></div>' + '</div>' + links;
+      pane.innerHTML = oben + leisteHtml() + '<div class="wc-galerie' + (einst.gross ? ' gross' : '') + '" aria-busy="true">' + '<div class="wc-kachel skeleton"></div><div class="wc-kachel skeleton"></div>' + '</div><div class="wc-stand"></div>' + links;
+      letzte = null;
       WP.webcams.laden().then(function (d) {
         if (meinNr !== nr) return;
         var gal = pane.querySelector('.wc-galerie');
         if (!d.kameras.length) {
+          pane.querySelector('.wc-leiste').remove(); pane.querySelector('.wc-stand').remove();
           gal.outerHTML = WP.leer('Noch keine freigegebenen Webcams', WP.privat.code() ? 'Der Bildspeicher hat gerade keine Kameras.' : 'Mit dem Code unter Einstellungen → Privat erscheinen die privaten Kameras.');
           return;
         }
         gal.removeAttribute('aria-busy');
-        gal.innerHTML = d.kameras.map(function (k) { return kachelHtml(k, d.status); }).join('');
-        gal.querySelectorAll('.wc-kachel').forEach(function (b) {
-          var k = d.kameras.filter(function (x) { return x.id === b.dataset.kamera; })[0];
-          b.addEventListener('click', function () { detail(k); });
-          var img = b.querySelector('img'), al = b.querySelector('.wc-alter'), am = b.querySelector('.ampel');
-          img.addEventListener('error', function () { img.remove(); b.querySelector('.wc-rahmen').classList.add('ohne-bild'); if (!WP.webcams.alter(k, d.status)) { al.textContent = 'kein Bild'; am.className = 'ampel rot'; } });
-          img.addEventListener('load', function () { if (!WP.webcams.alter(k, d.status)) { al.textContent = 'Live'; am.className = 'ampel gruen'; } });
-        });
+        letzte = d;
+        galerieFuellen(gal, d);
+        standZeigen();
         var hinweis = d.privat ? '<div class="hinweis">' + WP.icons.schloss + ' Private Kameras nur für dich und deinen engsten Kreis, Bilder bitte nicht weitergeben.</div>' : '';
         pane.querySelector('.wc-oben').innerHTML = hinweis;
       }, function (e) {
         if (meinNr !== nr) return;
         var text = e.status === 429 ? WP.privat.meldung : e.status === 403 ? 'Der Bildspeicher lehnt diese Seite ab.' : e.status === 401 ? 'Der Code wurde nicht erkannt und ist gelöscht. Ohne Code geht es mit den freien Kameras weiter.' : 'Der Bildspeicher antwortet gerade nicht.';
-        var gal = pane.querySelector('.wc-galerie');
+        var gal = pane.querySelector('.wc-galerie'), leiste = pane.querySelector('.wc-leiste');
+        if (leiste) leiste.remove();
+        var st = pane.querySelector('.wc-stand'); if (st) st.remove();
         gal.outerHTML = WP.leer('Webcams gerade nicht verfügbar', text, '<button type="button" class="button leise" data-wc-nochmal>Erneut versuchen</button>');
         var n = pane.querySelector('[data-wc-nochmal]'); if (n) n.addEventListener('click', function () { WP.webcams.laden(true); zeichnen(); });
       });
@@ -6122,8 +6245,8 @@ a.eintrag > span { color: var(--akzent); }
   }
 
   // ---------- Detail-Blatt ----------
-  var wc = { ansicht: 'aktuell', stunden: 6, tempo: 1 };
-  (function () { var g = WP.merk('webcam'); if (g && typeof g === 'object') { if (ANSICHTEN.some(function (a) { return a[0] === g.ansicht; })) wc.ansicht = g.ansicht; if (+g.stunden) wc.stunden = +g.stunden; if (+g.tempo) wc.tempo = +g.tempo; } })();
+  var wc = { ansicht: 'aktuell', stunden: 6, tempo: 1, dauer: '1' };
+  (function () { var g = WP.merk('webcam'); if (g && typeof g === 'object') { if (ANSICHTEN.some(function (a) { return a[0] === g.ansicht; })) wc.ansicht = g.ansicht; if (+g.stunden) wc.stunden = +g.stunden; if (+g.tempo) wc.tempo = +g.tempo; if (DAUER.some(function (d) { return d[0] === g.dauer; })) wc.dauer = g.dauer; } })();
   var timer = null, spielt = false, dnr = 0;
   function stop() { if (timer) { clearInterval(timer); timer = null; } }
   function seg(name, wert, optionen, label) {
@@ -6131,41 +6254,150 @@ a.eintrag > span { color: var(--akzent); }
       return '<button type="button" role="radio" data-' + name + '="' + o[0] + '" aria-checked="' + (String(o[0]) === String(wert)) + '">' + esc(o[1]) + '</button>';
     }).join('') + '</div>';
   }
-  function fehler(text) { return '<div class="wc-fehler" role="status">' + WP.icons.kamera + '<p><b>Bild nicht verfügbar.</b><br>' + esc(text || 'Die Kamera antwortet gerade nicht.') + '</p></div>'; }
+  function fehler(text, titel) { return '<div class="wc-fehler" role="status">' + WP.icons.kamera + '<p><b>' + esc(titel || 'Bild nicht verfügbar.') + '</b><br>' + esc(text || 'Die Kamera antwortet gerade nicht.') + '</p></div>'; }
+
+  // Wischen: waagerecht mindestens 50 px und mehr als senkrecht; fn(+1) = nächste, fn(-1) = vorherige
+  var gewischt = false;
+  function wischen(el, fn) {
+    var x0 = 0, y0 = 0, an = false;
+    el.addEventListener('touchstart', function (e) { var t = e.touches && e.touches[0]; an = !!t && e.touches.length === 1; if (an) { x0 = t.clientX; y0 = t.clientY; } }, { passive: true });
+    el.addEventListener('touchmove', function (e) { var t = e.touches && e.touches[0]; if (an && t && Math.abs(t.clientY - y0) > Math.abs(t.clientX - x0) + 10) an = false; }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      var t = e.changedTouches && e.changedTouches[0]; if (!an || !t) return; an = false;
+      var dx = t.clientX - x0, dy = t.clientY - y0;
+      if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return;
+      gewischt = true; setTimeout(function () { gewischt = false; }, 400);   // der Tipp nach dem Wischen schließt das Vollbild nicht
+      fn(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+
+  // ---------- Vollbild: ein schwarzes Overlay für alle Kameras, folgt dem Bild im Detailblatt ----------
+  var vb = null, nachbarFn = null, abgleichFn = null, umschalten = false;
+  function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement; }
+  function vbTaste(e) {
+    if (e.key === 'Escape') vbZu();
+    else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && nachbarFn) nachbarFn(e.key === 'ArrowLeft' ? -1 : 1);
+  }
+  function vbFsWechsel() { if (vb && vb.echt && !fsElement()) vbZu(); }
+  function vbZu() {
+    if (!vb) return;
+    var v = vb; vb = null;
+    document.removeEventListener('keydown', vbTaste);
+    document.removeEventListener('fullscreenchange', vbFsWechsel); document.removeEventListener('webkitfullscreenchange', vbFsWechsel);
+    if (fsElement()) { try { var x = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (x && x.catch) x.catch(function () { }); } catch (e) { } }
+    v.el.remove();
+    if (v.zurueck && document.contains(v.zurueck)) v.zurueck.focus();
+  }
+  function vbAuf(zurueck) {
+    if (vb) return;
+    var el = document.createElement('div');
+    el.className = 'wc-vb'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Webcam im Vollbild');
+    el.innerHTML = '<img class="wc-vb-bild" decoding="async" alt=""><p class="wc-vb-zeit" aria-live="polite"></p>' +
+      '<button type="button" class="wc-vb-zu" aria-label="Vollbild schließen">' + WP.icons.schliessen + '</button>';
+    document.body.appendChild(el);
+    vb = { el: el, img: el.querySelector('img'), zeit: el.querySelector('.wc-vb-zeit'), zurueck: zurueck, echt: false };
+    el.addEventListener('click', function () { if (!gewischt) vbZu(); });
+    wischen(el, function (r) { if (nachbarFn) nachbarFn(r); });
+    document.addEventListener('keydown', vbTaste);
+    // echtes Vollbild nur, wo das Gerät es für Elemente kann (iPad, Mac); auf dem iPhone bleibt es beim Overlay
+    var fs = el.requestFullscreen || el.webkitRequestFullscreen;
+    if ((document.fullscreenEnabled || document.webkitFullscreenEnabled) && fs) {
+      try { var pr = fs.call(el); if (pr && pr.then) pr.then(function () { if (vb) vb.echt = true; }, function () { }); else vb.echt = true; } catch (e) { }
+      document.addEventListener('fullscreenchange', vbFsWechsel); document.addEventListener('webkitfullscreenchange', vbFsWechsel);
+    }
+    if (abgleichFn) abgleichFn();
+    el.querySelector('.wc-vb-zu').focus();
+  }
 
   function detail(k) {
     stop(); spielt = false;
     var ansicht = k.archiv ? wc.ansicht : 'aktuell';
+    // Reihenfolge zum Wischen und für die Knöpfe ‹ › = aktuell sortierte Galerie
+    var liste = letzte ? sortiert(letzte) : [], idx = liste.map(function (x) { return x.id; }).indexOf(k.id), nav = idx >= 0 && liste.length > 1;
     var quelle = 'Bild: <a href="' + esc(k.seite || '#') + '" target="_blank" rel="noopener">' + esc(k.quelle || k.betreiber || 'Betreiber') + ' ↗</a>' + (k.lizenz ? ' · ' + esc(k.lizenz) : '') + '. Die Rechte am Bild liegen beim Betreiber.' +
       (k.privat ? '<br>' + WP.icons.schloss + ' Private Ebene: nur für dich, nicht weitergeben.' : '') +
       (!k.archiv ? '<br>Der Betreiber wünscht keine Speicherung: nur das Live-Bild.' : '');
+    var navHtml = nav ? '<div class="wc-nav"><button type="button" data-wc-nav="-1" aria-label="Vorherige Kamera"' + (idx === 0 ? ' disabled' : '') + '>' + WP.icons.zurueck + '</button>' +
+      '<span class="wc-nav-name">' + esc(k.kurz || k.name) + '</span>' +
+      '<button type="button" data-wc-nav="1" aria-label="Nächste Kamera"' + (idx === liste.length - 1 ? ' disabled' : '') + '>' + WP.icons.weiter + '</button></div>' : '';
     var html = '<div class="wc-detail">' + (k.archiv ? seg('wc-ansicht', ansicht, ANSICHTEN, 'Ansicht der Webcam') : '') +
-      '<div id="wc-zusatz"></div><div class="wc-buehne" id="wc-buehne" aria-live="polite"></div><div id="wc-steuerung"></div>' +
+      '<div id="wc-zusatz"></div><div class="wc-rahmenb"><div class="wc-buehne" id="wc-buehne" aria-live="polite"></div>' +
+      '<button type="button" class="wc-vbknopf" id="wc-vbknopf" data-wc-vb aria-label="Vollbild" hidden>' + WP.icons.vollbild + '</button></div>' + navHtml +
+      '<div id="wc-steuerung"></div>' +
       '<p class="wc-zeit" id="wc-zeit" aria-live="polite"></p><p class="wc-quelle">' + quelle + '</p></div>';
-    var b = WP.blattAuf('webcam', html, { titel: k.name, untertitel: k.privat ? 'Privat' : (k.quelle || ''), beimSchliessen: function () { stop(); dnr++; } });
+    var b = WP.blattAuf('webcam', html, { titel: k.name, untertitel: nav ? (idx + 1) + ' von ' + liste.length + (k.privat ? ' · Privat' : '') : (k.privat ? 'Privat' : (k.quelle || '')),
+      beimSchliessen: function () { stop(); dnr++; abgleichFn = null; nachbarFn = null; if (!umschalten) vbZu(); } });
     var $ = function (s) { return b.querySelector(s); };
     function zeit(t) { $('#wc-zeit').textContent = t || ''; }
     function sichern() { WP.merk('webcam', wc); }
 
-    function aktuell() {
-      $('#wc-steuerung').innerHTML = ''; $('#wc-zusatz').innerHTML = '';
+    // Wischen und Knöpfe: zur Nachbarkamera, Ansicht bleibt (wc.ansicht), Film stoppt mit dem alten Blatt
+    function nachbar(r) {
+      var z = liste[idx + r]; if (!z) return;
+      umschalten = true; try { detail(z); } finally { umschalten = false; }
+      var nb = !vb && WP.zustand.blatt && WP.zustand.blatt.querySelector('[data-wc-nav="' + r + '"]'); if (nb && !nb.disabled) nb.focus();
+    }
+    if (nav) { nachbarFn = nachbar; wischen($('#wc-buehne'), nachbar); }
+    // Vollbild-Overlay nachführen, wenn sich Bild oder Zeitangabe im Blatt ändern (Film, Streifen, Ansichtswechsel)
+    function abgleich() {
+      var im = $('.wc-bild'), kn = $('#wc-vbknopf'); kn.hidden = !im;
+      if (!vb) return;
+      vb.zurueck = kn;
+      if (im && vb.img.getAttribute('src') !== im.getAttribute('src')) vb.img.src = im.getAttribute('src');
+      if (im) vb.img.alt = im.alt;
+      vb.zeit.textContent = $('#wc-zeit').textContent;
+    }
+    abgleichFn = abgleich;
+    if (global.MutationObserver) new MutationObserver(abgleich).observe($('.wc-detail'), { subtree: true, childList: true, attributes: true, attributeFilter: ['src'] });
+
+    function bildJetzt() {
+      dnr++;
       $('#wc-buehne').innerHTML = '<img class="wc-bild" decoding="async" alt="Webcam ' + esc(k.name) + ', aktuelles Bild" src="' + esc(k.live) + '">';
       zeit('Wird geladen …');
       $('.wc-bild').addEventListener('load', function () { zeit('Abgerufen um ' + WP.uhrMannheim(Date.now()) + ' Uhr · neues Bild etwa alle ' + (k.takt || 15) + ' Min.'); });
+    }
+    // „Gestern um diese Zeit“: das Archivbild, das am nächsten an jetzt − 24 h liegt, höchstens 45 Min. daneben
+    function bildGestern() {
+      var n = ++dnr;
+      $('#wc-buehne').innerHTML = '<div class="wc-lade skeleton"></div>'; zeit('');
+      archivHolen(k).then(function (shots) {
+        if (n !== dnr) return;
+        var ziel = wcJetzt() - 24 * 3600000, best = null;
+        shots.forEach(function (s) { if (!best || Math.abs(s.ms - ziel) < Math.abs(best.ms - ziel)) best = s; });
+        if (!best || Math.abs(best.ms - ziel) > 45 * 60000) { $('#wc-buehne').innerHTML = fehler('Um diese Zeit liegt im Archiv kein Bild von gestern.', 'Kein Bild von gestern'); return; }
+        $('#wc-buehne').innerHTML = '<img class="wc-bild" decoding="async" alt="Webcam ' + esc(k.name) + ', Bild von gestern" src="' + esc(best.url) + '">';
+        zeit('Gestern ' + wcDatum(best.t) + ' ' + wcUhr(best.t) + ' Uhr');
+      }, function (e) { if (n === dnr) $('#wc-buehne').innerHTML = fehler(e.status === 0 ? 'Der Bildspeicher antwortet nicht.' : 'Das Archiv ist gerade nicht erreichbar.'); });
+    }
+    function aktuell() {
+      $('#wc-zusatz').innerHTML = '';
+      $('#wc-steuerung').innerHTML = k.archiv ? seg('wc-zeitpunkt', 'jetzt', [['jetzt', 'Jetzt'], ['gestern', 'Gestern um diese Zeit']], 'Zeitpunkt des Bildes') : '';
+      bildJetzt();
     }
     function mitArchiv(zeichne) {
       var n = ++dnr;
       $('#wc-buehne').innerHTML = '<div class="wc-lade skeleton"></div>'; $('#wc-steuerung').innerHTML = ''; zeit('');
       archivHolen(k).then(function (shots) { if (n === dnr) zeichne(shots); }, function (e) { if (n === dnr) { $('#wc-buehne').innerHTML = fehler(e.status === 0 ? 'Der Bildspeicher antwortet nicht.' : 'Das Archiv ist gerade nicht erreichbar.'); } });
     }
+    // Bilder vorladen; bei langen Filmen erst 10, den Rest gestaffelt, damit der Film flüssig anläuft
+    function vorladen(f, n) {
+      var lade = function (s) { var i = new Image(); i.src = s.url; };
+      if (f.length <= 60) { f.forEach(lade); return; }
+      f.slice(0, 10).forEach(lade);
+      var rest = f.slice(10), pos = 0;
+      (function weiter() { if (n !== dnr) return; rest.slice(pos, pos + 5).forEach(lade); pos += 5; if (pos < rest.length) setTimeout(weiter, 250); })();
+    }
     function film(shots) {
-      var ab = wcJetzt() - 60 * 60000, f = shots.filter(function (s) { return s.ms >= ab; });
-      if (f.length < 2) { $('#wc-buehne').innerHTML = fehler('Für die letzte Stunde gibt es noch zu wenige Bilder (mindestens 2 nötig).'); return; }
-      f.forEach(function (s) { var i = new Image(); i.src = s.url; });   // vorladen
+      var n = dnr, jetzt = wcJetzt(), ab = wc.dauer === 'heute' ? Math.floor(jetzt / 86400000) * 86400000 : jetzt - (+wc.dauer) * 3600000;
+      var f = shots.filter(function (s) { return s.ms >= ab; });
+      var lang = wc.dauer === 'heute' ? 'von heute' : wc.dauer === '1' ? 'der letzten Stunde' : 'der letzten ' + wc.dauer + ' Stunden';
+      var dauerSeg = seg('wc-dauer', wc.dauer, DAUER, 'Länge des Films');
+      if (f.length < 2) { $('#wc-buehne').innerHTML = fehler('Für ' + (wc.dauer === 'heute' ? 'heute' : 'diesen Zeitraum') + ' gibt es noch zu wenige Bilder (mindestens 2 nötig).'); $('#wc-steuerung').innerHTML = dauerSeg; return; }
+      vorladen(f, n);
       var i0 = 0, reduziert = global.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-      $('#wc-buehne').innerHTML = '<img class="wc-bild" decoding="async" alt="Webcam ' + esc(k.name) + ', Film der letzten Stunde" src="' + esc(f[0].url) + '">';
+      $('#wc-buehne').innerHTML = '<img class="wc-bild" decoding="async" alt="Webcam ' + esc(k.name) + ', Film ' + lang + '" src="' + esc(f[0].url) + '">';
       $('#wc-steuerung').innerHTML = '<div class="wc-film"><button type="button" class="button" id="wc-play">Pause</button>' +
-        '<input type="range" id="wc-regler" min="0" max="' + (f.length - 1) + '" value="0" step="1" aria-label="Bild im Film wählen"></div>' + seg('wc-tempo', wc.tempo, TEMPO, 'Tempo des Films');
+        '<input type="range" id="wc-regler" min="0" max="' + (f.length - 1) + '" value="0" step="1" aria-label="Bild im Film wählen"></div>' + seg('wc-tempo', wc.tempo, TEMPO, 'Tempo des Films') + dauerSeg;
       var zeige = function (i) { i0 = i; var img = $('.wc-bild'); if (img) img.src = f[i].url; $('#wc-regler').value = i; zeit('Aufnahme ' + wcUhr(f[i].t) + ' Uhr · Bild ' + (i + 1) + ' von ' + f.length); };
       var takt = function () { stop(); if (!spielt) return; timer = setInterval(function () { if (!$('#wc-regler') || document.hidden) return; zeige((i0 + 1) % f.length); }, 900 / wc.tempo); };
       var spiele = function (an) { spielt = an; var p = $('#wc-play'); p.textContent = an ? 'Pause' : 'Abspielen'; p.setAttribute('aria-label', an ? 'Film anhalten' : 'Film abspielen'); takt(); };
@@ -6179,19 +6411,22 @@ a.eintrag > span { color: var(--akzent); }
       });
       zeige(0); spiele(!reduziert);
     }
-    function streifen(f, raster, titel) {
+    // opt: { label(t) Beschriftung der Zelle, zeit(s) Zeitangabe, hinweis } für die Ansicht „Jahr“
+    function streifen(f, raster, titel, opt) {
       if (!f.length) { $('#wc-buehne').innerHTML = fehler('Für diesen Zeitraum liegen noch keine Bilder vor.'); return; }
+      opt = opt || {};
+      var lab = opt.label || wcUhr, zt = opt.zeit || function (s) { return 'Aufnahme ' + wcDatum(s.t) + ' ' + wcUhr(s.t) + ' Uhr'; };
       var zellen = raster || f.map(function (s) { return { t: s.t, s: s }; }), letzte = f[f.length - 1];
       $('#wc-buehne').innerHTML = '<img class="wc-bild" decoding="async" alt="Webcam ' + esc(k.name) + ', ' + esc(titel) + '" src="' + esc(letzte.url) + '">';
       $('#wc-steuerung').innerHTML = '<div class="wc-streifen" role="list" tabindex="0" aria-label="' + esc(titel) + ', nach rechts scrollen">' + zellen.map(function (z) {
-        return z.s ? '<button type="button" role="listitem" class="wc-zelle" data-wc-url="' + esc(z.s.url) + '" data-wc-t="' + esc(z.s.t) + '" aria-label="Bild von ' + wcUhr(z.t) + ' Uhr"><img loading="lazy" decoding="async" alt="" src="' + esc(z.s.url) + '"><span>' + wcUhr(z.t) + '</span></button>'
+        return z.s ? '<button type="button" role="listitem" class="wc-zelle" data-wc-url="' + esc(z.s.url) + '" data-wc-t="' + esc(z.s.t) + '" aria-label="Bild von ' + lab(z.t) + (opt.label ? '' : ' Uhr') + '"><img loading="lazy" decoding="async" alt="" src="' + esc(z.s.url) + '"><span>' + lab(z.t) + '</span></button>'
           : '<div role="listitem" class="wc-zelle leer-zelle" aria-label="Kein Bild um ' + wcUhr(z.t) + ' Uhr"><span>–</span><span>' + wcUhr(z.t) + '</span></div>';
-      }).join('') + '</div>';
-      zeit('Aufnahme ' + wcDatum(letzte.t) + ' ' + wcUhr(letzte.t) + ' Uhr · ' + f.length + ' Bilder');
+      }).join('') + '</div>' + (opt.hinweis ? '<p class="wc-hinweis">' + esc(opt.hinweis) + '</p>' : '');
+      zeit(opt.zeit ? zt(letzte) : 'Aufnahme ' + wcDatum(letzte.t) + ' ' + wcUhr(letzte.t) + ' Uhr · ' + f.length + ' Bilder');
       var str = $('.wc-streifen'); if (str) str.scrollLeft = str.scrollWidth;
       str.addEventListener('click', function (e) {
         var z = e.target.closest('[data-wc-url]'); if (!z) return;
-        var im = $('.wc-bild'); if (im) im.src = z.dataset.wcUrl; zeit('Aufnahme ' + wcDatum(z.dataset.wcT) + ' ' + wcUhr(z.dataset.wcT) + ' Uhr');
+        var im = $('.wc-bild'); if (im) im.src = z.dataset.wcUrl; zeit(zt({ t: z.dataset.wcT }));
       });
     }
     function tag(shots) {
@@ -6207,15 +6442,32 @@ a.eintrag > span { color: var(--akzent); }
       var ab = wcJetzt() - wc.stunden * 3600000;
       streifen(shots.filter(function (s) { return s.ms >= ab; }), null, 'Rückblick der letzten ' + wc.stunden + ' Stunden');
     }
+    // Jahr: je Tag das Bild, das am nächsten an 12:00 Ortszeit liegt; neueste rechts
+    function jahr(shots) {
+      var tage = {};
+      shots.forEach(function (s) {
+        var d = s.t.slice(0, 10), abst = Math.abs(s.ms - wcMs(d + 'T12:00'));
+        if (!tage[d] || abst < tage[d].abst) tage[d] = { s: s, abst: abst };
+      });
+      var f = Object.keys(tage).sort().map(function (d) { return tage[d].s; });
+      streifen(f, null, 'Jahresrückblick, ein Mittagsbild je Tag', {
+        label: wcDatum, zeit: function (s) { return 'Mittag ' + wcDatum(s.t) + String(s.t).slice(0, 4) + ', ' + wcUhr(s.t) + ' Uhr'; },
+        hinweis: 'Ein Mittagsbild je Tag, bis zu ein Jahr.'
+      });
+    }
     function zeigen(an) {
       stop(); spielt = false; dnr++;
       if (an !== 'rueck') $('#wc-zusatz').innerHTML = '';
-      if (an === 'aktuell') aktuell(); else mitArchiv(an === 'film' ? film : an === 'tag' ? tag : rueck);
+      if (an === 'aktuell') aktuell(); else mitArchiv(an === 'film' ? film : an === 'tag' ? tag : an === 'jahr' ? jahr : rueck);
     }
     b.addEventListener('click', function (e) {
-      var a = e.target.closest('[data-wc-ansicht]'), s = e.target.closest('[data-wc-stunden]');
+      var a = e.target.closest('[data-wc-ansicht]'), s = e.target.closest('[data-wc-stunden]'), d = e.target.closest('[data-wc-dauer]'), z = e.target.closest('[data-wc-zeitpunkt]'), v = e.target.closest('[data-wc-vb]'), nv = e.target.closest('[data-wc-nav]');
       if (a) { wc.ansicht = a.dataset.wcAnsicht; sichern(); b.querySelectorAll('[data-wc-ansicht]').forEach(function (y) { y.setAttribute('aria-checked', String(y === a)); }); zeigen(wc.ansicht); }
       else if (s) { wc.stunden = +s.dataset.wcStunden; sichern(); zeigen('rueck'); }
+      else if (d) { wc.dauer = d.dataset.wcDauer; sichern(); zeigen('film'); }
+      else if (z) { stop(); b.querySelectorAll('[data-wc-zeitpunkt]').forEach(function (y) { y.setAttribute('aria-checked', String(y === z)); }); if (z.dataset.wcZeitpunkt === 'gestern') bildGestern(); else bildJetzt(); }
+      else if (v) vbAuf(v);
+      else if (nv) nachbar(+nv.dataset.wcNav);
     });
     // Bilder, die nicht laden: ruhiger Zustand (Fehlerereignisse steigen nicht auf, deshalb in der Erfassungsphase)
     b.addEventListener('error', function (e) {
@@ -6224,11 +6476,126 @@ a.eintrag > span { color: var(--akzent); }
       else { var z = t.closest('.wc-zelle'); if (z) { z.classList.add('leer-zelle'); t.remove(); } }
     }, true);
     zeigen(ansicht);
+    abgleich();
   }
 
+  // Sortierung und Kachelgröße: nur neu zeichnen, kein neuer Abruf
+  function verdrahten(p) {
+    if (p.dataset.wcLeiste) return;
+    p.dataset.wcLeiste = '1';
+    p.addEventListener('click', function (e) {
+      var s = e.target.closest('[data-wc-sort]'), g = e.target.closest('[data-wc-gross]'), n = e.target.closest('[data-wc-neu]');
+      if (n) { aktualisieren(n); return; }
+      if (!s && !g) return;
+      if (s) { einst.sort = s.dataset.wcSort; p.querySelectorAll('[data-wc-sort]').forEach(function (y) { y.setAttribute('aria-checked', String(y === s)); }); }
+      else { einst.gross = !einst.gross; g.setAttribute('aria-pressed', String(einst.gross)); }
+      WP.merk('webcams', einst);
+      var gal = p.querySelector('.wc-galerie');
+      if (gal && letzte) galerieFuellen(gal, letzte);
+    });
+  }
   WP.module.webcams = {
-    sichtbar: function (p) { pane = p; zeichnen(); },
-    zeichnen: function (p) { pane = p; if (WP.zustand.reiter === 'webcams') zeichnen(); }
+    sichtbar: function (p) { pane = p; verdrahten(p); zeichnen(); },
+    zeichnen: function (p) { pane = p; verdrahten(p); if (WP.zustand.reiter === 'webcams') zeichnen(); }
+  };
+})(window);
+
+/* ---- js/lieblingskamera.js ---- */
+/* WetterPro Mannheim – Lieblingskamera: ein Kamerabild als Band im Reiter „Wetter“, gewählt unter Einstellungen → Lieblingskamera.
+   Liste, Alter und Detail kommen vom Webcam-Modul (WP.webcams); gemerkt wird nur die Kennung unter „lieblingskamera“.
+   Ist die Kamera nicht (mehr) in der Liste, z. B. weil Privat aus ist, bleibt das Band weg und die Wahl gespeichert. */
+(function (global) {
+  'use strict';
+  var WP = global.WP = global.WP || {};
+  var esc = function (s) { return WP.esc(s); };
+  var kennt = null;   // zuletzt geladene Liste (für den Namen in den Einstellungen)
+
+  function wahl() { var id = WP.merk('lieblingskamera'); return typeof id === 'string' && id ? id : ''; }
+  function speicher() { return !!(WP.worker && WP.worker.adresse()); }
+  function finde(d, id) { return d.kameras.filter(function (k) { return k.id === id; })[0] || null; }
+
+  // ---------- Band im Reiter Wetter ----------
+  function bandHtml(k, status) {
+    var a = WP.webcams.alter(k, status);
+    return '<button type="button" class="li-band" data-liebling="' + esc(k.id) + '" aria-label="Lieblingskamera ' + esc(k.name) + (k.privat ? ' (privat)' : '') + ', öffnen">' +
+      '<span class="wc-rahmen li-rahmen is-laden"><img decoding="async" alt="" src="' + esc(k.live || '') + '">' +
+      '<span class="wc-unten"><span class="wc-name">' + esc(k.kurz || k.name) + '</span>' +
+      '<span class="wc-band"><i class="ampel ' + (a ? a.ampel : 'grau') + '"></i><span class="wc-alter">' + (a ? esc(a.text) : 'Live') + '</span></span></span>' +
+      (k.privat ? '<span class="wc-schloss" title="Privat">' + WP.icons.schloss + '</span>' : '') + '</span></button>';
+  }
+  var nr = 0;
+  function fuellen() {
+    var ziel = document.getElementById('wetter-liebling');
+    if (!ziel) return;
+    var id = wahl(), meinNr = ++nr;
+    if (!id || !speicher()) { ziel.innerHTML = ''; return; }
+    // Bis die Liste da ist, steht ein Rahmen in der Höhe des Bandes, damit nichts springt
+    if (!ziel.firstChild) ziel.innerHTML = '<div class="li-band li-skeleton skeleton" aria-hidden="true"></div>';
+    WP.webcams.laden().then(function (d) {
+      kennt = d;
+      if (meinNr !== nr || ziel !== document.getElementById('wetter-liebling')) return;
+      var k = finde(d, id);
+      if (!k) { ziel.innerHTML = ''; return; }
+      var alt = ziel.querySelector('[data-liebling]');
+      if (alt && alt.dataset.liebling === id) {   // schon da: nur Alter und Ampel auffrischen
+        var a = WP.webcams.alter(k, d.status);
+        if (a) { alt.querySelector('.wc-alter').textContent = a.text; alt.querySelector('.ampel').className = 'ampel ' + a.ampel; }
+        return;
+      }
+      ziel.innerHTML = bandHtml(k, d.status);
+      var b = ziel.querySelector('.li-band'), rahmen = b.querySelector('.li-rahmen'), img = b.querySelector('img');
+      b.addEventListener('click', function () { WP.webcams.oeffnen(k); });
+      img.addEventListener('load', function () { rahmen.classList.remove('is-laden'); if (!WP.webcams.alter(k, d.status)) { b.querySelector('.wc-alter').textContent = 'Live'; b.querySelector('.ampel').className = 'ampel gruen'; } });
+      img.addEventListener('error', function () { img.remove(); rahmen.classList.remove('is-laden'); rahmen.classList.add('ohne-bild'); });
+    }, function () { if (meinNr === nr && ziel.querySelector('.li-skeleton')) ziel.innerHTML = ''; });
+  }
+  WP.bei('daten', function () { if (WP.zustand.reiter === 'wetter') fuellen(); });
+  WP.bei('privat', function () { if (WP.zustand.reiter === 'wetter') fuellen(); });
+  // Beim Zurückkehren in den Reiter Wetter neu laden (die Liste selbst cached WP.webcams 2 Minuten)
+  var ersteSicht = WP.module && WP.module.wetter && WP.module.wetter.sichtbar;
+  if (WP.module && WP.module.wetter) WP.module.wetter.sichtbar = function (pane) { if (ersteSicht) ersteSicht(pane); if (WP.zustand.daten) fuellen(); };
+
+  // ---------- Einstellungen ----------
+  // Text rechts im Eintrag: Name der gewählten Kamera, „Keine“ oder (ohne Bildspeicher) „Bildspeicher fehlt“
+  WP.lieblingText = function () {
+    if (!speicher()) return 'Bildspeicher fehlt';
+    var id = wahl();
+    if (!id) return 'Keine';
+    var k = kennt && finde(kennt, id);
+    return k ? esc(k.kurz || k.name) : (kennt ? 'Nicht verfügbar' : '…');
+  };
+  // Name nachtragen, sobald die Liste da ist (die Einstellungen können schon offen sein)
+  WP.lieblingNamen = function () {
+    if (!speicher() || !wahl()) return;
+    WP.webcams.laden().then(function (d) {
+      kennt = d;
+      var s = document.querySelector('#blatt-einstellungen [data-einst=liebling] > span');
+      if (s) s.innerHTML = WP.lieblingText() + ' ›';
+    }, function () { });
+  };
+  WP.lieblingBlatt = function (o) {
+    var b = WP.blattAuf('liebling', '<div class="laden">Kameras werden geladen …</div>', { titel: 'Lieblingskamera', zurueck: o.zurueck });
+    WP.webcams.laden().then(function (d) {
+      kennt = d;
+      if (WP.zustand.blatt !== b) return;
+      var id = wahl();
+      var zeile = function (kid, name, klein, schloss) {
+        return '<div class="eintrag" data-kam="' + esc(kid) + '" role="button" tabindex="0">' + WP.icons.haken.replace('class="ic"', 'class="ic' + (kid === id ? '' : ' leer') + '"') +
+          '<div>' + esc(name) + (klein ? '<small>' + esc(klein) + '</small>' : '') + '</div>' + (schloss ? '<span title="Privat">' + WP.icons.schloss + '</span>' : '') + '</div>';
+      };
+      var html = '<div class="zeile-liste wahl">' + zeile('', 'Keine', 'Kein Kamerabild im Reiter Wetter', false) +
+        d.kameras.map(function (k) { return zeile(k.id, k.name, k.quelle, k.privat); }).join('') + '</div>' +
+        '<div class="hinweis">Die gewählte Kamera erscheint als Band im Reiter Wetter. Tippen auf das Band öffnet die Kamera mit Film, Tag und Rückblick.' +
+        (id && !finde(d, id) ? ' Die bisher gewählte Kamera ist gerade nicht in der Liste (z. B. Privat aus); die Wahl bleibt gespeichert.' : '') + '</div>';
+      b.querySelector('.inhalt').innerHTML = html;
+      b.querySelectorAll('[data-kam]').forEach(function (z) {
+        var los = function () { WP.merk('lieblingskamera', z.dataset.kam); WP.blattZu(); WP.zeige('wetter'); };
+        z.addEventListener('click', los);
+        z.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); los(); } });
+      });
+    }, function () {
+      if (WP.zustand.blatt === b) b.querySelector('.inhalt').innerHTML = '<div class="fehler">Die Kameras konnten nicht geladen werden. Bitte später noch einmal versuchen.</div>';
+    });
   };
 })(window);
 
@@ -6464,7 +6831,7 @@ a.eintrag > span { color: var(--akzent); }
 /* WetterPro Mannheim – Reiter „Karten“: ein Reiter für Wetterkarte und Radar/Satellit (höchstens fünf Reiter).
    Der Kartenbaustein ../gemeinsam/wpkarte.js bleibt unverändert und kennt die Modi „karten“ und „radsat“. Hier stehen die Ebenen
    beider Modi in einer Chip-Leiste: Tippen auf eine Ebene des anderen Modus baut die Karte in diesem Modus neu (Ebene vorgemerkt).
-   Dazu die Ebene „Webcams“ als Aufsatz: Marker mit Miniaturbild vom Bildspeicher, Zeitband „vor 6 Min.“ und Ampelpunkt
+   Dazu die Grundkarte „Luftbild“ (Esri, per Chip umschaltbar, Relief bleibt darunter) und die Ebene „Webcams“ als Aufsatz: Marker mit Miniaturbild vom Bildspeicher, Zeitband „vor 6 Min.“ und Ampelpunkt
    (Vorbild alte WeatherPro); Tippen öffnet das Webcam-Detail. Nur-Link-Kameras als einfacher Pin, Tippen zeigt den Link.
    Eingebaut wird erst, wenn der Reiter sichtbar ist – eine verborgene Karte misst 0 Pixel. */
 (function (global) {
@@ -6481,6 +6848,10 @@ a.eintrag > span { color: var(--akzent); }
   var karte = null, pane = null, daten = null;
   var modus = WP.merk('karten-modus') === 'radsat' ? 'radsat' : 'karten';
   var webcamsAn = WP.merk('wk-webcams') !== false;
+  var luftAn = WP.merk('wk-luftbild') === true, luftEbene = null, quelleBasis = null;
+  var LUFT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', LUFT_QUELLE = ' · Luftbild: Esri, Maxar, Earthstar Geographics';
+  var BUENDEL_PX = 70, BUENDEL_AB = 13;   // Marker unter 70 px Abstand werden gebündelt, ab Zoom 13 nie
+  var wmNeu = function () { };   // aktueller Zoom-Lauscher der Webcam-Ebene
   var wmEbene = null, wmLauf = 0;   // wmLauf: nur der jüngste Aufruf setzt Marker (sonst doppelt)
 
   function zeit(text) {
@@ -6497,16 +6868,16 @@ a.eintrag > span { color: var(--akzent); }
       ziel: pane, modus: modus, ort: daten.ort, orte: WP.zustand.orte, offset: daten.offset,
       symbol: function (code, istTag) { return WP.symbol(WP.wetter.art(code, istTag)); },
       offline: WP.OFFLINE, snapshot: WP.SNAP, merk: WP.merk, beiZeit: zeit,
-      wechsel: WECHSEL, aktiv: modus, beiWechsel: function (id) { umschalten(id, true); }, vollbildStart: !!vollbild
+      maxZoom: 17, wechsel: WECHSEL, aktiv: modus, beiWechsel: function (id) { umschalten(id, true); }, vollbildStart: !!vollbild
     });
-    if (karte) { appleChips(pane); webcamEbene(); }
+    if (karte) { appleChips(pane); luftbild(); webcamEbene(); }
   }
   // Moduswechsel: Karte abbauen und im anderen Modus neu bauen (der Baustein kennt je Karte nur einen Modus)
   function umschalten(neu, vollbild) {
     if (neu === modus) return;
     modus = neu; WP.merk('karten-modus', modus);
     if (karte) { karte.abbauen(); karte = null; }
-    wmEbene = null;
+    wmEbene = null; luftEbene = null;
     bauen(vollbild);
   }
 
@@ -6537,6 +6908,15 @@ a.eintrag > span { color: var(--akzent); }
       webcamEbene();
     });
     if (wetter) wetter.insertAdjacentElement('afterend', wc); else leiste.insertBefore(wc, leiste.firstChild);
+    var lb = document.createElement('button');
+    lb.type = 'button'; lb.className = 'wk-knopf wk-luftbild' + (luftAn ? ' is-on' : ''); lb.setAttribute('aria-pressed', String(luftAn));
+    lb.title = 'Luftbild'; lb.innerHTML = WP.icons.globus + '<span>Luftbild</span>';
+    lb.addEventListener('click', function () {
+      luftAn = !luftAn; WP.merk('wk-luftbild', luftAn);
+      lb.classList.toggle('is-on', luftAn); lb.setAttribute('aria-pressed', String(luftAn));
+      luftbild();
+    });
+    wc.insertAdjacentElement('afterend', lb);
 
     // Ebenen des anderen Modus: Rad/Sat ist eine Ebene der Karten-Leiste (und umgekehrt)
     var anderer = modus === 'karten' ? 'radsat' : 'karten';
@@ -6555,38 +6935,79 @@ a.eintrag > span { color: var(--akzent); }
     });
   }
 
+  // ---------- Grundkarte „Luftbild“ (Esri World Imagery, eigene Leaflet-Ebene über dem Relief) ----------
+  function luftbild() {
+    var el = pane && pane.querySelector('.wk-leaflet'), map = el && el._wkMap, q = pane && pane.querySelector('.wk-quelle');
+    if (!map || !global.L) return;
+    if (q) { if (quelleBasis === null || q.textContent.indexOf(LUFT_QUELLE) < 0) quelleBasis = q.textContent.replace(LUFT_QUELLE, ''); }
+    if (!luftEbene) luftEbene = L.tileLayer(LUFT_URL, { maxZoom: 19, zIndex: 1.5, crossOrigin: false, bleibt: true });   // bleibt: Rad/Sat-Uhr in wpkarte.js räumt die Ebene nicht ab
+    if (luftAn) { if (!map.hasLayer(luftEbene)) luftEbene.addTo(map); } else if (map.hasLayer(luftEbene)) map.removeLayer(luftEbene);
+    if (q && quelleBasis !== null) q.textContent = quelleBasis + (luftAn ? LUFT_QUELLE : '');
+  }
+
   // ---------- Ebene „Webcams“ (Aufsatz auf den Baustein, eigene Leaflet-Ebene) ----------
+  // Marker liegen als Liste (wmPunkte); buendeln() setzt sie je Zoomstufe neu: Marker unter 70 px Abstand werden ein Zahlenknopf, ab Zoom 13 gibt es nur Einzelmarker.
+  function buendeln(map, ebene, punkte) {
+    ebene.clearLayers();
+    var z = map.getZoom(), gruppen = [];
+    punkte.forEach(function (pt) {
+      pt.p = map.latLngToLayerPoint(pt.ll);
+      var g = null;
+      if (z < BUENDEL_AB) gruppen.some(function (x) { return x.some(function (o) { if (o.p.distanceTo(pt.p) < BUENDEL_PX) { g = x; return true; } }); });
+      if (g) g.push(pt); else gruppen.push([pt]);
+    });
+    gruppen.forEach(function (g) {
+      if (g.length === 1) { g[0].marker().addTo(ebene); return; }
+      var n = g.length, ll = g.map(function (x) { return x.ll; });
+      var m = L.marker(L.latLngBounds(ll).getCenter(), { icon: L.divIcon({ className: 'wm-mk', html: '<button type="button" class="wm-buendel" aria-label="' + n + ' Webcams, zum Vergrößern tippen">' + n + '</button>', iconSize: [44, 44], iconAnchor: [22, 22] }), keyboard: false, zIndexOffset: 950 });
+      m.on('click', function () { map.fitBounds(L.latLngBounds(ll), { padding: [70, 70], maxZoom: 17, animate: false }); });
+      m.addTo(ebene);
+    });
+  }
   function webcamEbene() {
     var el = pane && pane.querySelector('.wk-leaflet'), map = el && el._wkMap;
     if (!map || !global.L) return;
     if (!wmEbene) wmEbene = L.layerGroup();
     wmEbene.clearLayers();
+    map.off('zoomend', wmNeu);
     if (!webcamsAn) { map.removeLayer(wmEbene); return; }
     wmEbene.addTo(map);
-    var ebene = wmEbene, lauf = ++wmLauf;
+    var ebene = wmEbene, lauf = ++wmLauf, punkte = [];
+    wmNeu = function () { if (ebene === wmEbene && lauf === wmLauf) buendeln(map, ebene, punkte); };
+    map.on('zoomend', wmNeu);
     WP.konfig().then(function (konfig) {
       if (ebene !== wmEbene || lauf !== wmLauf) return;
       (konfig.webcams || []).filter(function (w) { return w.freigabe === 'nur-link' && isFinite(w.lat) && isFinite(w.lon); }).forEach(function (w) {
-        var m = L.marker([w.lat, w.lon], { icon: L.divIcon({ className: 'wm-mk', html: '<button type="button" class="wm-link" aria-label="Webcam ' + esc(w.kurz || w.name) + ' (Link)">' + WP.icons.kamera + '</button>', iconSize: [28, 28], iconAnchor: [14, 14] }), keyboard: false, zIndexOffset: 600 });
-        m.on('click', function () { linkBlatt(w); });
-        m.addTo(ebene);
+        var m = null;
+        punkte.push({ ll: L.latLng(w.lat, w.lon), marker: function () {
+          if (m) return m;
+          m = L.marker([w.lat, w.lon], { icon: L.divIcon({ className: 'wm-mk', html: '<button type="button" class="wm-link" aria-label="Webcam ' + esc(w.kurz || w.name) + ' (Link)">' + WP.icons.kamera + '</button>', iconSize: [28, 28], iconAnchor: [14, 14] }), keyboard: false, zIndexOffset: 600 });
+          m.on('click', function () { linkBlatt(w); });
+          return m;
+        } });
       });
+      wmNeu();
     });
     if (!WP.worker.adresse()) return;
     WP.webcams.laden().then(function (d) {
       if (ebene !== wmEbene || lauf !== wmLauf) return;
       d.kameras.filter(function (k) { return isFinite(k.lat) && isFinite(k.lon) && k.live; }).forEach(function (k) {
-        var a = WP.webcams.alter(k, d.status) || { text: 'Live', ampel: 'grau' };
-        var html = '<button type="button" class="wm-pin" data-kamera="' + esc(k.id) + '" aria-label="Webcam ' + esc(k.name) + '"><img alt="" decoding="async" src="' + esc(k.live) + '">' +
-          '<span class="wm-band"><i class="ampel ' + a.ampel + '"></i>' + esc(a.text) + '</span>' + (k.privat ? '<span class="wm-schloss">' + WP.icons.schloss + '</span>' : '') + '</button>';
-        var m = L.marker([k.lat, k.lon], { icon: L.divIcon({ className: 'wm-mk', html: html, iconSize: [84, 66], iconAnchor: [42, 70] }), keyboard: false, zIndexOffset: 900 });
-        m.on('click', function () { WP.webcams.oeffnen(k); });
-        m.on('add', function () {
-          var img = m.getElement() && m.getElement().querySelector('img');
-          if (img) img.addEventListener('error', function () { img.remove(); });
-        });
-        m.addTo(ebene);
+        var m = null;
+        punkte.push({ ll: L.latLng(k.lat, k.lon), marker: function () {
+          if (m) return m;
+          var a = WP.webcams.alter(k, d.status) || { text: 'Live', ampel: 'grau' };
+          var html = '<button type="button" class="wm-pin" data-kamera="' + esc(k.id) + '" aria-label="Webcam ' + esc(k.name) + '"><img alt="" decoding="async" src="' + esc(k.live) + '">' +
+            '<span class="wm-band"><i class="ampel ' + a.ampel + '"></i>' + esc(a.text) + '</span>' + (k.privat ? '<span class="wm-schloss">' + WP.icons.schloss + '</span>' : '') + '</button>';
+          m = L.marker([k.lat, k.lon], { icon: L.divIcon({ className: 'wm-mk', html: html, iconSize: [84, 66], iconAnchor: [42, 70] }), keyboard: false, zIndexOffset: 900 });
+          m.on('click', function () { WP.webcams.oeffnen(k); });
+          m.on('add', function () {
+            var img = m.getElement() && m.getElement().querySelector('img');
+            if (img) img.addEventListener('error', function () { img.remove(); });
+          });
+          return m;
+        } });
       });
+      wmNeu();
     }, function () { });
   }
   function linkBlatt(w) {
@@ -6597,7 +7018,7 @@ a.eintrag > span { color: var(--akzent); }
 
   WP.module.karten = {
     zeichnen: function (p, d) { pane = p; daten = d; bauen(); },
-    sichtbar: function (p) { pane = p; bauen(); if (karte) { karte.sichtbar(); webcamEbene(); } },
+    sichtbar: function (p) { pane = p; bauen(); if (karte) { karte.sichtbar(); luftbild(); webcamEbene(); } },
     verlassen: function () { if (karte) karte.verlassen(); }
   };
 })(window);

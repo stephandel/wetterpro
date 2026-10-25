@@ -1511,6 +1511,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     var offset = cfg.offset || 0;               // Sekunden zu UTC für die Anzeige
     var symbol = cfg.symbol || function () { return ''; };
     var OFFLINE = !!cfg.offline;
+    var MAXZOOM = isFinite(cfg.maxZoom) ? +cfg.maxZoom : 10;   // Standard 10; Mannheim übergibt 17 (OpenTopoMap liefert bis 17)
     var SNAP = cfg.snapshot || 'snapshot/';
     var merk = cfg.merk || function () { return null; };
     var beiZeit = cfg.beiZeit || function () {};
@@ -1579,14 +1580,14 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
 
     // ---------- Karte ----------
     // zoomAnimation aus: die animierte Zoomstufe blieb im Test hängen (kein transitionend), ohne Animation zoomt es zuverlässig
-    map = L.map(el.karte, { zoomControl: false, attributionControl: false, worldCopyJump: true, zoomSnap: 0.5, minZoom: 2, maxZoom: 10, tap: false, zoomAnimation: false });
+    map = L.map(el.karte, { zoomControl: false, attributionControl: false, worldCopyJump: true, zoomSnap: 0.5, minZoom: 2, maxZoom: MAXZOOM, tap: false, zoomAnimation: false });
     map.on('zoomend', function () { zoomKnoepfe(); });
     el.karte._wkMap = map;                             // für Fehlersuche im Browser erreichbar
     // Standardansicht: Nahaufnahme um den Ort (Stephans Wunsch: die Umgebung des Ortes füllt die Karte, z. B. Fuerteventura und Lanzarote oder die Rhein-Neckar-Region).
     // Rad/Sat etwas weiter weg, damit man Wolkenfelder als Ganzes sieht.
     var START_ZOOM = MODUS === 'karten' ? 8.3 : 7.3;
     if (!OFFLINE) {
-      basis = L.tileLayer(KACHEL_RELIEF, { subdomains: 'abc', maxZoom: 10, zIndex: 1, crossOrigin: false }).addTo(map);
+      basis = L.tileLayer(KACHEL_RELIEF, { subdomains: 'abc', maxZoom: MAXZOOM, zIndex: 1, crossOrigin: false }).addTo(map);
       map.setView([ort.lat, ort.lon], START_ZOOM, { animate: false });
     }
     var markenEbene = L.layerGroup().addTo(map);
@@ -2066,7 +2067,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
       var alt = frames[frames.length - 1]; framesBauen();
-      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis) map.removeLayer(l); }); anzeigen(true); }
+      if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis && !l.options.bleibt) map.removeLayer(l); }); anzeigen(true); }   // bleibt: fremde Grundkarten-Ebenen (z. B. Luftbild) stehen lassen
     }, 5 * 60000);
 
     return {

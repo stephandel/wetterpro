@@ -3,7 +3,7 @@
    Daten (config.json, stationen.json, Snapshot) immer zuerst aus dem Netz, der Cache nur als Rückfall ohne Netz.
    Bilder, fremde Datenquellen und der Bildspeicher gehen nie durch den Cache.
    VERSION erneuern, damit Geräte die neue Hülle holen; online.py setzt beim Veröffentlichen den Bauzeitpunkt ein. */
-var VERSION = 'wpma-20261025-012048';
+var VERSION = 'wpma-20261025-020924';
 var HUELLE = ['./', 'manifest.webmanifest', 'js/konfig.js', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/favicon-32.png'];
 var LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
 
