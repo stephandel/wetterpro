@@ -843,7 +843,8 @@ svg { display:block; }
 .g-mg .mg-ansichten { display: none !important; }      /* nur die Ansicht „Webcam“, kein Umschalter nötig */
 /* Webcam-Band (nur mit Bildspeicher und Kameras im Umkreis): Kamerawahl als wischbare Reihe mit 44-px-Knöpfen */
 .g-mg .mg-cam { border-color: var(--trenner); border-radius: var(--r-kachel); }
-.g-mg .mg-camwahl { left: 8px; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.g-mg .mg-cam .mg-bild-player { width: var(--tap); height: var(--tap); }   /* Player-Knopf des Bausteins auf 44 px */
+.g-mg .mg-camwahl { left: calc(16px + var(--tap)); justify-content: flex-start; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .g-mg .mg-camwahl::-webkit-scrollbar { display: none; }
 .g-mg .mg-camwahl > :first-child { margin-left: auto; }   /* rechtsbündig, solange alles passt; sonst wischbar ab dem ersten */
 .g-mg .mg-camtab { flex: none; min-height: var(--tap); min-width: var(--tap); border-radius: var(--r-button); font: 600 var(--fs-footnote, 13px)/1 var(--font); }
