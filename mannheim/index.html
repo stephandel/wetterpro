@@ -840,7 +840,13 @@ svg { display:block; }
 /* Kachel auf ruhigem Grund */
 .g-mg.mg { border: 0; border-radius: var(--r-kachel); box-shadow: none; background: var(--bg-2); margin: var(--s3) var(--rand) 0; }
 .g-mg .mg-top { display: none; }                         /* nur ein Ort, nur ein Modell – Reiter überflüssig */
-.g-mg .mg-cam, .g-mg .mg-ansichten, .g-mg .mg-camwahl { display: none !important; }   /* keine Kamera in dieser App */
+.g-mg .mg-ansichten { display: none !important; }      /* nur die Ansicht „Webcam“, kein Umschalter nötig */
+/* Webcam-Band (nur mit Bildspeicher und Kameras im Umkreis): Kamerawahl als wischbare Reihe mit 44-px-Knöpfen */
+.g-mg .mg-cam { border-color: var(--trenner); border-radius: var(--r-kachel); }
+.g-mg .mg-camwahl { left: 8px; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.g-mg .mg-camwahl::-webkit-scrollbar { display: none; }
+.g-mg .mg-camwahl > :first-child { margin-left: auto; }   /* rechtsbündig, solange alles passt; sonst wischbar ab dem ersten */
+.g-mg .mg-camtab { flex: none; min-height: var(--tap); min-width: var(--tap); border-radius: var(--r-button); font: 600 var(--fs-footnote, 13px)/1 var(--font); }
 .g-mg .mg-readout { border-radius: var(--r-kachel) var(--r-kachel) var(--r-button) var(--r-button); box-shadow: 0 10px 14px -10px rgba(0,0,0,.18); }
 .g-mg .mg-zeit { border-radius: var(--r-button); font-size: var(--fs-body); }
 .g-mg .mg-wrap { border-color: var(--trenner); }
@@ -1958,7 +1964,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   var WP = global.WP = global.WP || {};
   WP.module = WP.module || {};
 
-  // Mannheim ist der feste Startort (Mitte wie config/mannheim.json); weitere Orte kommen über die Suche dazu
+  // Mannheim ist der Startort beim ersten Start (Mitte wie config/mannheim.json); danach gilt der zuletzt gewählte Ort (P-8509, 04.11.2026)
   var MANNHEIM = { id: 'mannheim', name: 'Mannheim', region: 'Baden-Württemberg, Deutschland', lat: 49.4875, lon: 8.466 };
   WP.MANNHEIM = MANNHEIM;
   var ORTE_START = [MANNHEIM];
@@ -2035,10 +2041,17 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     WP.zustand.orte = (g && g.length) ? g : ORTE_START.slice();
     // Neue Standardorte einmalig an eine schon gespeicherte Liste anhängen
     ORTE_START.forEach(function (o) { if (!WP.zustand.orte.some(function (x) { return x.id === o.id; })) WP.zustand.orte.push(o); });
-    // Mannheim steht immer vorn und ist bei jedem Start gewählt; ein anderer Ort gilt bis zum nächsten Start
+    // Mannheim steht immer vorn in den Favoriten; gewählt ist der zuletzt gewählte Ort, sonst Mannheim
     var mi = WP.zustand.orte.map(function (o) { return o.id; }).indexOf('mannheim');
     if (mi > 0) WP.zustand.orte.unshift(WP.zustand.orte.splice(mi, 1)[0]);
-    WP.zustand.ort = WP.zustand.orte[0];
+    WP.zustand.ort = letzterOrt() || WP.zustand.orte[0];
+  }
+  // Gemerkt wird der ganze Ort (auch ohne Stern); ältere Fassungen merkten nur die Kennung
+  function letzterOrt() {
+    var g = merk('ort');
+    if (typeof g === 'string') return WP.zustand.orte.filter(function (o) { return o.id === g; })[0] || null;
+    if (g && typeof g.id === 'string' && typeof g.name === 'string' && typeof g.lat === 'number' && typeof g.lon === 'number' && Math.abs(g.lat) <= 90 && Math.abs(g.lon) <= 180) return g;
+    return null;
   }
   WP.istFavorit = function (ort) { return WP.zustand.orte.some(function (o) { return o.id === ort.id; }); };
   WP.favoritUmschalten = function (ort) {
@@ -2099,7 +2112,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   var ladeUhr = null;
   WP.setzeOrt = function (ort) {
     WP.zustand.ort = ort;
-    merk('ort', ort.id);
+    merk('ort', { id: ort.id, name: ort.name, region: ort.region || '', lat: ort.lat, lon: ort.lon });
     titel.textContent = ort.name;
     WP.laden();
   };
@@ -5209,6 +5222,59 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   WP.module = WP.module || {};
 
   var instanz = null, schluessel = null, gemerkt = null, ausstehend = false;
+  var UMKREIS_KM = 30, HOECHSTENS = 5;   // Webcam-Band: Kameras im Umkreis des Orts, die nächsten zuerst
+
+  // ---------- Webcam-Band (P-db09, 04.11.2026) ----------
+  // Der Baustein zeigt über dem Diagramm das Bild zur Stunde am Auswahl-Strich (jetzt live, vorher aus dem Archiv).
+  // Er holt das Archiv selbst unter <bildspeicher>/webcam?ort=<id>, kennt aber keinen Privat-Code. Diese Abfrage wird
+  // deshalb hier über WP.worker.holen geleitet (Kopfzeile X-Privat-Code, 401 verwirft den Code); alles andere bleibt unberührt.
+  var kameraListe = null;   // letzte Liste vom Bildspeicher (WP.webcams.laden)
+  function archivUmleiten() {
+    var roh = global.fetch;
+    if (!roh || roh.wpmaArchiv) return;
+    var neu = function (u, o) {
+      var a = WP.worker && WP.worker.adresse(), pre = a ? a + '/webcam?ort=' : null;
+      if (pre && typeof u === 'string' && u.indexOf(pre) === 0 && u.indexOf('&') < 0) {
+        return WP.worker.holen('/webcam?kamera=' + u.slice(pre.length)).then(function (j) {
+          return new Response(JSON.stringify(j), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }, function (e) { return new Response('{}', { status: e.status > 0 ? e.status : 503, headers: { 'Content-Type': 'application/json' } }); });
+      }
+      return roh.apply(this, arguments);
+    };
+    neu.wpmaArchiv = true;
+    global.fetch = neu;
+  }
+  // Kameras für den Ort: im Umkreis, mit Live-Bild oder Archiv; Lieblingskamera zuerst, dann nach Entfernung
+  function kameras(ort) {
+    if (!kameraListe || !WP.worker || !WP.worker.adresse()) return [];
+    var lieb = WP.merk('lieblingskamera');
+    return kameraListe.filter(function (k) { return (k.live || k.archiv) && isFinite(k.lat) && isFinite(k.lon) && WP.entfernungKm(ort, k) <= UMKREIS_KM; })
+      .map(function (k) { return { k: k, d: k.id === lieb ? -1 : WP.entfernungKm(ort, k) }; })
+      .sort(function (x, y) { return x.d - y.d; }).slice(0, HOECHSTENS)
+      .map(function (x) { return { id: x.k.id, name: x.k.name, kurz: x.k.kurz || x.k.name, live: x.k.live || '', quelle: x.k.quelle || '', seite: x.k.seite || '' }; });
+  }
+  // Liste holen; ändern sich dadurch die Kameras des Orts, baut sich das Meteogramm neu
+  // Laufende Nummer: eine ältere Antwort (z. B. noch mit Code unterwegs, während Privat aus geht) wird verworfen.
+  // Kurzer Netzfehler (Status 0): alte Liste behalten, damit das Band nicht abbaut; sonst (401, 404 …) leeren.
+  var listeNr = 0;
+  function listeHolen(neu) {
+    var nr = ++listeNr;
+    var leeren = function () { if (kameraListe) { kameraListe = null; neuBauen(); } };
+    if (!WP.worker || !WP.worker.adresse() || !WP.webcams) { leeren(); return; }
+    WP.webcams.laden(neu).then(function (d) { if (nr !== listeNr) return; kameraListe = d.kameras || []; neuBauen(); },
+      function (e) { if (nr !== listeNr || (e && e.status === 0)) return; leeren(); });
+  }
+  function neuBauen() {
+    if (!gemerkt) return;
+    var p = document.querySelector('.pane[data-pane="graphs"]');
+    if (!p) return;
+    if (p.hidden) { if (instanz && schluessel !== schluesselFuer(gemerkt)) ausstehend = true; return; }
+    if (instanz && schluessel === schluesselFuer(gemerkt)) return;
+    bauen(p, gemerkt);
+  }
+  function schluesselFuer(daten) {
+    return daten.ort.id + '|' + WP.modell(daten.modell).id + '|' + kameras(daten.ort).map(function (k) { return k.id; }).join(',');
+  }
 
   function haftOben(ziel) {
     var top = document.getElementById('top');
@@ -5220,19 +5286,22 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   function bauen(pane, daten) {
     if (!global.Meteogramm) { pane.innerHTML = '<div class="hinweis">Der Diagramm-Baustein fehlt.</div>'; return; }
     var modell = WP.modell(daten.modell);
-    var neu = daten.ort.id + '|' + modell.id;
-    if (instanz && schluessel === neu) { instanz.auffrischen(); return; }   // gleicher Ort, gleiches Modell: nur Werte auffrischen
+    var neu = schluesselFuer(daten), cams = kameras(daten.ort);
+    if (instanz && schluessel === neu) { instanz.auffrischen(); return; }   // gleicher Ort, Modell und Kameras: nur Werte auffrischen
     if (instanz) { try { instanz.abbauen(); } catch (e) { console.warn(e); } instanz = null; }
     pane.innerHTML = '<div class="g-mg" id="g-mg"></div>';
     var ziel = pane.firstChild;
     haftOben(ziel);
-    // Ohne Netz (Artefakt): gespeicherten Stand aus snapshot/mg-<ort>-*.json reichen (gemeinsam/meteogramm-offline.js)
-    if (global.MeteogrammOffline) global.MeteogrammOffline.einrichten({ pfad: WP.SNAP, orte: WP.zustand.orte, erzwingen: function () { return WP.OFFLINE; } });
+    // Ohne Netz (Artefakt): gespeicherten Stand aus snapshot/mg-<ort>-*.json reichen (gemeinsam/meteogramm-offline.js); der gewählte Ort zählt mit, auch ohne Stern
+    if (global.MeteogrammOffline) global.MeteogrammOffline.einrichten({ pfad: WP.SNAP, orte: WP.zustand.orte.concat([daten.ort]), erzwingen: function () { return WP.OFFLINE; } });
     instanz = global.Meteogramm.einbauen({
       ziel: ziel,
       orte: [{ id: daten.ort.id, name: daten.ort.name, lat: daten.ort.lat, lon: daten.ort.lon }],
       modelle: [{ id: modell.id, name: modell.kurz, lang: modell.name }],
       karte: false,
+      // Webcam-Band nur mit Bildspeicher und Kameras im Umkreis; sonst kein Band (wie bisher)
+      kameras: cams.length ? (function () { var k = {}; k[daten.ort.id] = cams; return k; })() : {},
+      bildspeicher: cams.length ? WP.worker.adresse() : null,
       // Mannheim liegt nicht am Meer: keine Wellen-, Tiden- und Wasserzeilen
       zeilen: ['sonne', 'temp', 'wind', 'regen', 'uv', 'feuchte', 'wolken', 'druck', 'staub'],
       zeilenStandard: ['sonne', 'temp', 'wind', 'regen', 'wolken', 'druck'],
@@ -5247,10 +5316,14 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
 
   function zeichnen(pane, daten) {
     gemerkt = daten;
+    listeHolen(false);
     if (pane.hidden) { ausstehend = true; if (!instanz) pane.innerHTML = '<div class="laden">Graphs werden vorbereitet …</div>'; return; }
     ausstehend = false;
     bauen(pane, daten);
   }
+
+  archivUmleiten();
+  WP.bei('privat', function () { listeHolen(true); });
 
   WP.module.graphs = {
     zeichnen: zeichnen,
