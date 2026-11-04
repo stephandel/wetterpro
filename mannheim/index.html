@@ -6547,11 +6547,14 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
       var ab = wcJetzt() - wc.stunden * 3600000;
       streifen(shots.filter(function (s) { return s.ms >= ab; }), null, 'Rückblick der letzten ' + wc.stunden + ' Stunden');
     }
-    // Jahr: je Tag das Bild, das am nächsten an 12:00 Ortszeit liegt; neueste rechts
+    // Jahr: je Tag das Bild, das am nächsten an 12:00 Ortszeit liegt; neueste rechts.
+    // Nur Bilder von 9 bis 15 Uhr zählen (B2, 04.11.2026): sonst stand vor Mittag heute ein Nachtbild als „Mittag“ im Streifen
+    var MITTAG_FENSTER = 3 * 3600000;
     function jahr(shots) {
       var tage = {};
       shots.forEach(function (s) {
         var d = s.t.slice(0, 10), abst = Math.abs(s.ms - wcMs(d + 'T12:00'));
+        if (!(abst <= MITTAG_FENSTER)) return;
         if (!tage[d] || abst < tage[d].abst) tage[d] = { s: s, abst: abst };
       });
       var f = Object.keys(tage).sort().map(function (d) { return tage[d].s; });
