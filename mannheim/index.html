@@ -1205,6 +1205,9 @@ body { background: var(--bg); }
 .top button { color: var(--akzent-kopf); }
 .top button .ic { width: 24px; height: 24px; }
 
+/* Tab-Leiste und Knopfleiste unter der Wetterkurve deckend statt Glas: sonst scheint Diagrammtext durch (P-3704, 10.11.2026) */
+.tabbar, .g-mg .mg-knoepfe { background: var(--bg-2); border-top-color: var(--trenner); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
 /* Gefüllte Flächen in der Akzentfarbe: dunkle Schrift auf Bernstein */
 .button, .chip.aktiv, .wk .wk-knopf.is-on, .g-mg .mg-filmknopf.is-on { background: var(--akzent-flaeche); color: var(--auf-akzent); }
 .button.leise { background: var(--fuellung); color: var(--akzent); }
