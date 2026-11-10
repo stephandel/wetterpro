@@ -232,6 +232,9 @@ svg { display:block; }
 .wx-mond .sym { width:40px; height:40px; }
 .wx-luft { display:grid; justify-items:center; gap:2px; font-size:11px; color:var(--dim); line-height:1.1; }
 .wx-luft .sym { width:30px; height:30px; }
+/* iPhone SE (320 pt): sieben feste Spalten sind breiter als der Bildschirm (Seite ließ sich 22 px seitlich schieben, „km/h“ ragte hinaus);
+   dort fallen Mond (bleibt im Tagesdetail) und Luft (wie in Mannheim) aus der Tageszeile, die übrigen Spalten werden schmaler (P-ab1e, 10.11.2026) */
+@media (max-width:359px) { .wx-tag { grid-template-columns:46px 50px 44px minmax(0,1fr) 66px; } .wx-tag .wx-luft, .wx-tag .wx-mond { display:none; } }
 
 .wx-sp-mond { display:flex; align-items:center; gap:4px; }
 .wx-sp-mond .sym { width:22px; height:22px; margin:-3px; }
@@ -4414,6 +4417,9 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
   function haftOben(ziel) {
     var top = document.getElementById('top');
     ziel.style.setProperty('--mg-haft-oben', (top ? top.offsetHeight : 52) + 'px');
+    // Knopfleiste unter der Wetterkurve über der Reiterleiste halten (Höhe samt sicherem Bereich unten), wie in WetterPro Mannheim (P-ecd6)
+    var leiste = document.getElementById('tabbar');
+    ziel.style.setProperty('--mg-haft-unten', (leiste ? leiste.offsetHeight : 0) + 'px');
   }
 
   // Der Baustein misst beim Aufbau seine Breite – in einem verborgenen Reiter wäre sie 0 und der

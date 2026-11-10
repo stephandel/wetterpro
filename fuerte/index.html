@@ -632,8 +632,10 @@ svg { display:block; }
 .wx-u b { color:var(--ink); font-size:17px; font-weight:700; }
 
 /* Tagesliste */
-.wx-tage { margin:12px 12px 12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-.wx-tag { display:grid; grid-template-columns:56px 62px 66px minmax(0,1fr) 40px 38px 64px; align-items:center; padding:8px 6px 8px 10px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; }
+/* Spalten: Tag, Symbol, Temperatur, Sonne/Regen, Luft, Mond, Wind. Sonne/Regen braucht 65 px („12,7mm“), Luft 48 px („Schlecht“);
+   in schmalen Karten fallen erst der Mond (bleibt im Tagesdetail), dann die Luft weg – wie in WetterPro Mannheim (P-bbea, 10.11.2026) */
+.wx-tage { margin:12px 12px 12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; container-type:inline-size; }
+.wx-tag { display:grid; grid-template-columns:44px 48px 46px minmax(0,1fr) 48px 38px 64px; align-items:center; padding:8px 6px 8px 10px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; }
 .wx-tag:last-child { border-bottom:0; }
 .wx-tag.wx-heute { box-shadow:inset 3px 0 0 var(--akzent); }
 .wx-d { font-size:16px; font-weight:700; line-height:1.15; }
@@ -688,6 +690,9 @@ svg { display:block; }
 .wx-mond .sym { width:38px; height:38px; }
 .wx-luft { display:grid; justify-items:center; gap:2px; font-size:11px; color:var(--ink-dim); line-height:1.1; }
 .wx-luft .sym { width:28px; height:28px; color:var(--ink); }
+.wx-luft span { text-align:center; }
+@container (max-width:368px) { .wx-tag { grid-template-columns:44px 48px 46px minmax(0,1fr) 48px 64px; } .wx-tag .wx-mond { display:none; } }
+@container (max-width:330px) { .wx-tag { grid-template-columns:44px 48px 46px minmax(0,1fr) 64px; } .wx-tag .wx-luft { display:none; } }
 
 /* ---- css/graphs.css ---- */
 /* WetterPro Fuerte – Reiter „Graphs": Stephans Meteogramm-Baustein (gemeinsam/meteogramm.js).
@@ -4428,6 +4433,11 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     var top = document.getElementById('top');
     return (top ? top.offsetHeight : 52) + 'px';
   }
+  // Knopfleiste unter der Wetterkurve über der Reiterleiste halten (Höhe samt sicherem Bereich unten), wie in WetterPro Mannheim (P-ecd6)
+  function haftUnten() {
+    var leiste = document.getElementById('tabbar');
+    return (leiste ? leiste.offsetHeight : 0) + 'px';
+  }
 
   function einbauen(pane, daten) {
     if (!global.Meteogramm) {
@@ -4441,6 +4451,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     pane.innerHTML = '<div class="g-kopf"><b>' + esc(daten.ort.name) + '</b><span>' + esc(m.name) + '</span></div><div class="g-wrap"><div id="g-meteogramm"></div></div>';
     ziel = pane.querySelector('#g-meteogramm');
     ziel.style.setProperty('--mg-haft-oben', haftOben());
+    ziel.style.setProperty('--mg-haft-unten', haftUnten());
     // Ohne Netz (Artefakt): gespeicherten Stand aus snapshot/mg-<ort>-*.json reichen (gemeinsam/meteogramm-offline.js)
     if (global.MeteogrammOffline) global.MeteogrammOffline.einrichten({ pfad: WP.SNAP, orte: WP.zustand.orte, erzwingen: function () { return WP.OFFLINE; } });
     instanz = global.Meteogramm.einbauen({
@@ -4468,7 +4479,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     },
     sichtbar: function (pane) {
       if (ausstehend) { var d = ausstehend; ausstehend = null; einbauen(pane, d); return; }
-      if (ziel) ziel.style.setProperty('--mg-haft-oben', haftOben());
+      if (ziel) { ziel.style.setProperty('--mg-haft-oben', haftOben()); ziel.style.setProperty('--mg-haft-unten', haftUnten()); }
       if (instanz && instanz.zeichnen) { try { instanz.zeichnen(); } catch (e) {} }   // Breite kann sich geändert haben
     }
   };

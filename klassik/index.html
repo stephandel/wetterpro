@@ -149,6 +149,8 @@ svg { display:block; }
 .wx-tag .wx-w, .wx-sz .wx-w { align-items:center; justify-content:flex-end; font-size:12.5px; }
 .wx-tag .wx-w .windrose, .wx-sz .wx-w .windrose { width:28px; height:28px; }
 .wx-tag .wx-w div b, .wx-sz .wx-w div b { font-size:17px; }
+/* iPhone SE (320 pt): die festen Spalten waren 1 px breiter als der Bildschirm und ließen Sonne/Regen keinen Platz (P-ab1e, 10.11.2026) */
+@media (max-width:359px) { .wx-tag { grid-template-columns:50px 52px 50px minmax(0,1fr) 66px; } }
 
 /* Tagesdetail: Nacht / Tag / Nacht */
 .wx-spalten { display:grid; grid-template-columns:1fr 2fr 1fr; border-bottom:0.5px solid var(--linie); }
