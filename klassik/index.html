@@ -39,10 +39,10 @@ svg { display:block; }
 
 /* Kopfzeile */
 .top { position:sticky; top:0; z-index:15; background:var(--kopf); display:grid; grid-template-columns:48px minmax(0,1fr) 48px; align-items:center;
-  padding:calc(8px + env(safe-area-inset-top,0px)) 4px 8px; min-height:52px; }
+  padding:calc(6px + env(safe-area-inset-top,0px)) 4px 6px; min-height:52px; }
 .top .titel { text-align:center; font-size:20px; font-weight:600; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .top .unter { text-align:center; font-size:12px; color:var(--dim); line-height:1.2; }
-.top button { border:0; background:none; width:48px; height:40px; display:grid; place-items:center; cursor:pointer; }
+.top button { border:0; background:none; width:48px; height:44px; display:grid; place-items:center; cursor:pointer; }
 .top .zurueck { width:auto; padding:0 6px 0 4px; display:flex; align-items:center; gap:2px; font-size:16px; justify-self:start; }
 
 /* Reiterleiste */
@@ -71,6 +71,9 @@ svg { display:block; }
 /* Orte-Blatt */
 .suche { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--kopf); border-bottom:0.5px solid var(--linie); }
 .suche input { flex:1; min-width:0; border:0.5px solid var(--linie); background:rgba(255,255,255,.08); color:#fff; font:16px inherit; padding:8px 10px; border-radius:6px; }
+/* Tippflächen mindestens 44 × 44: Suchfeld, Stern „Favorit“; Kopfknöpfe oben 44 hoch (P-089b, 11.11.2026) */
+.suche input { min-height:44px; }
+.ort-eintrag [data-stern] { width:44px; height:44px; display:grid; place-items:center; }
 .suche input::placeholder { color:#8fa9cc; }
 .ort-eintrag { display:grid; grid-template-columns:52px 44px minmax(0,1fr) 44px; gap:8px; align-items:center; padding:9px 10px 9px 12px; border-bottom:0.5px solid var(--linie); cursor:pointer; }
 .ort-eintrag .t { color:var(--gelb); font-size:15px; line-height:1.15; }
@@ -114,6 +117,9 @@ svg { display:block; }
 .wx-temp { position:absolute; left:10px; bottom:6px; color:var(--gelb); font-size:38px; font-weight:500; letter-spacing:-1px; line-height:1.1; }
 .wx-rg { position:absolute; right:8px; bottom:14px; font-size:14px; display:flex; align-items:center; gap:4px; }
 .wx-rg small { font-size:11px; }
+/* Nur wo Regen und große Temperatur sonst übereinanderlägen (gemessen: 320 pt): Regen über die Temperatur, Symbol dafür kleiner, damit der Regen die Tropfen nicht berührt (P-caad, 11.11.2026) */
+.wx-akt-l { container-type:inline-size; }
+@container (max-width:150px) { .wx-rg { bottom:52px; } .wx-akt-l > .sym { width:96px; height:96px; } }
 .wx-akt-r { padding:14px 10px 8px; font-size:15px; }
 .wx-lage { text-align:center; margin-bottom:22px; }
 .wx-row { display:flex; justify-content:space-between; line-height:1.5; }
@@ -132,6 +138,15 @@ svg { display:block; }
 .wx-u { display:flex; justify-content:space-between; align-items:center; font-size:13.5px; }
 .wx-u span { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
 .wx-u b { color:var(--gelb); font-size:17px; font-weight:400; }
+/* Werte kleben nicht aneinander („0,0mm18°C“, „Luftdruck1031,1hPa“): mindestens 6 px Abstand, wird es zu eng, rutscht der Wert
+   rechtsbündig in die nächste Zeile; so bleibt jede Stundenkarte ein Drittel breit und die dritte wird nicht angeschnitten (P-7969, P-caad, 11.11.2026) */
+.wx-u { flex-wrap:wrap; column-gap:6px; }
+/* Ist die Karte zu schmal für beide Werte, brechen alle Karten der Reihe gemeinsam um statt nur einzelne */
+.wx-stunde { container-type:inline-size; }
+@container (max-width:100px) { .wx-u b { flex-basis:100%; text-align:right; } }
+.wx-u b { margin-left:auto; }
+.wx-row { flex-wrap:wrap; column-gap:6px; }
+.wx-row span:last-child { margin-left:auto; }
 
 /* Tagesliste */
 .wx-tag { display:grid; grid-template-columns:62px 96px 78px minmax(0,1fr) 74px; align-items:center; padding:8px 6px 8px 11px; border-bottom:0.5px solid var(--linie); font-size:15px; cursor:pointer; }
@@ -149,6 +164,8 @@ svg { display:block; }
 .wx-tag .wx-w, .wx-sz .wx-w { align-items:center; justify-content:flex-end; font-size:12.5px; }
 .wx-tag .wx-w .windrose, .wx-sz .wx-w .windrose { width:28px; height:28px; }
 .wx-tag .wx-w div b, .wx-sz .wx-w div b { font-size:17px; }
+/* 375 pt: „12,7mm“ lag 2 px über der Windrose; Symbol- und Temperaturspalte dort etwas schmaler (P-7969, 11.11.2026) */
+@media (max-width:399px) { .wx-tag { grid-template-columns:56px 80px 72px minmax(0,1fr) 74px; } }
 /* iPhone SE (320 pt): die festen Spalten waren 1 px breiter als der Bildschirm und ließen Sonne/Regen keinen Platz (P-ab1e, 10.11.2026) */
 @media (max-width:359px) { .wx-tag { grid-template-columns:50px 52px 50px minmax(0,1fr) 66px; } }
 
@@ -249,7 +266,7 @@ svg { display:block; }
 /* Zeitleiste unten */
 .wk-zeit { background: var(--wk-zeit); padding: 6px 10px 10px; border-top: 0.5px solid var(--wk-rand); }
 .wk-regler { display: flex; align-items: center; gap: 2px; }
-.wk-tk { width: 40px; height: 40px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+.wk-tk { width: 44px; height: 44px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
 .wk-tk svg { width: 18px; height: 18px; display: block; }
 .wk-tk:disabled { opacity: .35; }
 .wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
@@ -676,7 +693,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     { id: 'mengerschied', name: 'Mengerschied', region: 'Rheinland-Pfalz, Deutschland', lat: 49.9167, lon: 7.5000 }
   ];
   var REITER = [
-    { id: 'wetter', name: 'Wetter' }, { id: 'graphs', name: 'Graphs' }, { id: 'karten', name: 'Karten' }, { id: 'radsat', name: 'Rad/Sat' }, { id: 'mehr', name: 'Mehr' }
+    { id: 'wetter', name: 'Wetter' }, { id: 'graphs', name: 'Kurven' }, { id: 'karten', name: 'Karten' }, { id: 'radsat', name: 'Radar' }, { id: 'mehr', name: 'Mehr' }
   ];
   var AUFFRISCHEN_MS = 30 * 60000;
 
@@ -2021,13 +2038,14 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     });
 
     function groesseGeaendert() {
-      if (!map) return;
+      if (!map || abgebaut) return;                   // P-3101: späte Uhren (Drehen, Vollbild) treffen sonst die entfernte Karte
       map.invalidateSize({ animate: false });
       if (OFFLINE) offlineAnsicht(false);
       ticks(); hinweisSetzen();
     }
     window.addEventListener('resize', groesseGeaendert);
-    window.addEventListener('orientationchange', function () { setTimeout(groesseGeaendert, 300); });
+    function gedreht() { setTimeout(groesseGeaendert, 300); }
+    window.addEventListener('orientationchange', gedreht);
 
     // ---------- Start ----------
     function start() {
@@ -2088,7 +2106,8 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
         if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
         document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
         wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
-        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+        window.removeEventListener('resize', groesseGeaendert); window.removeEventListener('orientationchange', gedreht);
+        abgebaut = true; filmStopp(); clearInterval(uhr); clearTimeout(bewegUhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 

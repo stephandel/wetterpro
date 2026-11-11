@@ -86,10 +86,10 @@ svg { display:block; }
 /* Kopfzeile */
 .top { position:sticky; top:0; z-index:15; background:var(--surface); border-bottom:1px solid var(--border);
   display:grid; grid-template-columns:48px minmax(0,1fr) 48px; align-items:center;
-  padding:calc(8px + env(safe-area-inset-top,0px)) 4px 8px; min-height:52px; }
+  padding:calc(6px + env(safe-area-inset-top,0px)) 4px 6px; min-height:52px; }
 .top .titel { text-align:center; font-size:18px; font-weight:700; letter-spacing:-0.015em; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .top .unter { text-align:center; font-size:11.5px; color:var(--ink-dim); line-height:1.2; text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
-.top button { border:0; background:none; width:48px; height:40px; display:grid; place-items:center; cursor:pointer; color:var(--ink-dim); }
+.top button { border:0; background:none; width:48px; height:44px; display:grid; place-items:center; cursor:pointer; color:var(--ink-dim); }
 .top .zurueck { width:auto; padding:0 6px 0 4px; display:flex; align-items:center; gap:2px; font-size:15px; font-weight:600; justify-self:start; color:var(--akzent); }
 
 /* Reiterleiste */
@@ -123,13 +123,16 @@ svg { display:block; }
 
 /* Wahlzeilen (Erscheinungsbild, Akzent, Modell) */
 .wahl { display:flex; gap:8px; padding:10px 14px 14px; flex-wrap:wrap; }
-.wahl button { flex:1; min-width:84px; min-height:40px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); color:var(--ink-dim); font:600 13.5px var(--schrift); cursor:pointer; }
+.wahl button { flex:1; min-width:84px; min-height:44px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); color:var(--ink-dim); font:600 13.5px var(--schrift); cursor:pointer; }
 .wahl button.is-on { border-color:var(--akzent); color:var(--ink); background:var(--surface); }
 .wahl .farbe { display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:-2px; margin-right:6px; border:1px solid rgba(0,0,0,.2); }
 
 /* Orte-Blatt */
 .suche { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); color:var(--ink-dim); }
 .suche input { flex:1; min-width:0; border:1px solid var(--border); background:var(--surface-2); color:var(--ink); font:16px var(--schrift); padding:8px 10px; border-radius:10px; }
+/* Tippflächen mindestens 44 × 44: Suchfeld, Stern „Favorit“; Kopfknöpfe oben 44 hoch (P-089b, 11.11.2026) */
+.suche input { min-height:44px; }
+.ort-eintrag [data-stern] { width:44px; height:44px; display:grid; place-items:center; }
 .suche input::placeholder { color:var(--ink-dim); }
 .ort-eintrag { display:grid; grid-template-columns:52px 44px minmax(0,1fr) 44px; gap:8px; align-items:center; padding:9px 10px 9px 12px; border-bottom:1px solid var(--border); cursor:pointer; }
 .zeile-liste > .ort-eintrag:last-child { border-bottom:0; }
@@ -609,6 +612,9 @@ svg { display:block; }
 .wx-rg { position:absolute; right:10px; bottom:14px; font-size:13.5px; display:flex; align-items:center; gap:4px; color:var(--ink-dim); }
 .wx-rg .ic { color:var(--teal); }
 .wx-rg small { font-size:11px; }
+/* Nur wo Regen und große Temperatur sonst übereinanderlägen (gemessen: 320 und 375 pt): Regen über die Temperatur, Symbol dafür kleiner, damit der Regen die Tropfen nicht berührt (P-caad, 11.11.2026) */
+.wx-akt-l { container-type:inline-size; }
+@container (max-width:156px) { .wx-rg { bottom:52px; } .wx-akt-l > .sym { width:90px; height:90px; } }
 .wx-akt-r { padding:14px 12px 10px; font-size:14px; }
 .wx-lage { text-align:center; margin-bottom:16px; font-weight:600; font-size:15px; }
 .wx-row { display:flex; justify-content:space-between; line-height:1.6; color:var(--ink-dim); }
@@ -630,6 +636,15 @@ svg { display:block; }
 .wx-u span { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
 .wx-u .ic { color:var(--teal); }
 .wx-u b { color:var(--ink); font-size:17px; font-weight:700; }
+/* Werte kleben nicht aneinander („0,0mm18°C“, „Luftdruck1031,1hPa“): mindestens 6 px Abstand, wird es zu eng, rutscht der Wert
+   rechtsbündig in die nächste Zeile; so bleibt jede Stundenkarte ein Drittel breit und die dritte wird nicht angeschnitten (P-7969, P-caad, 11.11.2026) */
+.wx-u { flex-wrap:wrap; column-gap:6px; }
+/* Ist die Karte zu schmal für beide Werte, brechen alle Karten der Reihe gemeinsam um statt nur einzelne */
+.wx-stunde { container-type:inline-size; }
+@container (max-width:100px) { .wx-u b { flex-basis:100%; text-align:right; } }
+.wx-u b { margin-left:auto; }
+.wx-row { flex-wrap:wrap; column-gap:6px; }
+.wx-row span:last-child { margin-left:auto; }
 
 /* Tagesliste */
 /* Spalten: Tag, Symbol, Temperatur, Sonne/Regen, Luft, Mond, Wind. Sonne/Regen braucht 65 px („12,7mm“), Luft 48 px („Schlecht“);
@@ -742,7 +757,7 @@ svg { display:block; }
 /* Zeitleiste unten */
 .wk-zeit { background: var(--wk-zeit); padding: 6px 10px 10px; border-top: 0.5px solid var(--wk-rand); }
 .wk-regler { display: flex; align-items: center; gap: 2px; }
-.wk-tk { width: 40px; height: 40px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+.wk-tk { width: 44px; height: 44px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
 .wk-tk svg { width: 18px; height: 18px; display: block; }
 .wk-tk:disabled { opacity: .35; }
 .wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
@@ -3883,7 +3898,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     { id: 'mengerschied', name: 'Mengerschied', region: 'Rheinland-Pfalz, Deutschland', lat: 49.9167, lon: 7.5000 }
   ];
   var REITER = [
-    { id: 'wetter', name: 'Wetter' }, { id: 'graphs', name: 'Graphs' }, { id: 'karten', name: 'Karten' }, { id: 'radsat', name: 'Rad/Sat' }, { id: 'mehr', name: 'Mehr' }
+    { id: 'wetter', name: 'Wetter' }, { id: 'graphs', name: 'Kurven' }, { id: 'karten', name: 'Karten' }, { id: 'radsat', name: 'Radar' }, { id: 'mehr', name: 'Mehr' }
   ];
   var THEMEN = [{ id: 'dark', name: 'Dunkel' }, { id: 'light', name: 'Hell' }, { id: 'auto', name: 'Automatisch' }];
   var AKZENTE = [
@@ -4048,7 +4063,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
       return '<div class="eintrag' + (m.id === WP.zustand.modell ? ' is-on' : '') + '" data-modell="' + esc(m.id) + '"><div>' + esc(m.name) +
         '<div class="hinweis" style="padding:2px 0 0">' + esc(m.text) + '</div></div><span>' + (m.id === WP.zustand.modell ? 'gewählt' : '') + '</span></div>';
     }).join('') + '</div>' +
-      '<div class="hinweis">Alle Modelle kommen über Open-Meteo. Die Wahl gilt für Wetter, Tagesdetail und Graphs. ' +
+      '<div class="hinweis">Alle Modelle kommen über Open-Meteo. Die Wahl gilt für Wetter, Tagesdetail und Kurven. ' +
       'Ohne Netz zeigt die App den gespeicherten Stand – der gibt es nur für die beste Mischung.</div>';
     var b = WP.blattAuf('modell', html, { titel: 'Wettermodell', untertitel: WP.zustand.ort.name });
     b.querySelectorAll('[data-modell]').forEach(function (z) {
@@ -4138,7 +4153,7 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
           e('Einheiten', '°C · km/h · mm · hPa') + '</div>' +
         '<div class="band">App</div><div class="zeile-liste">' + e('Auf den Startbildschirm', 'Teilen → Zum Home-Bildschirm') + e('Über WetterPro Fuerte', 'Fassung 30.09.2026') + '</div>' +
         '<div class="hinweis">Aufbau nach WeatherPro, Optik der Fuerteventura-Seite. Vorhersage: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (Modell wählbar). ' +
-        'Graphs: Stephans Meteogramm-Baustein. Satellit (Farbe und Infrarot schwarz-weiß) und Regen: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a>, Meteosat, alle 10 Minuten. Ortssuche: Open-Meteo Geocoding.</div>';
+        'Kurven: Stephans Meteogramm-Baustein. Satellit (Farbe und Infrarot schwarz-weiß) und Regen: <a href="https://view.eumetsat.int" target="_blank" rel="noopener">EUMETSAT</a>, Meteosat, alle 10 Minuten. Ortssuche: Open-Meteo Geocoding.</div>';
       p.querySelector('[data-mehr="orte"]').addEventListener('click', orteBlatt);
       p.querySelector('[data-mehr="modell"]').addEventListener('click', modellBlatt);
       p.querySelector('[data-mehr="mond"]').addEventListener('click', function () { WP.mondBlatt(); });
@@ -5214,13 +5229,14 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
     });
 
     function groesseGeaendert() {
-      if (!map) return;
+      if (!map || abgebaut) return;                   // P-3101: späte Uhren (Drehen, Vollbild) treffen sonst die entfernte Karte
       map.invalidateSize({ animate: false });
       if (OFFLINE) offlineAnsicht(false);
       ticks(); hinweisSetzen();
     }
     window.addEventListener('resize', groesseGeaendert);
-    window.addEventListener('orientationchange', function () { setTimeout(groesseGeaendert, 300); });
+    function gedreht() { setTimeout(groesseGeaendert, 300); }
+    window.addEventListener('orientationchange', gedreht);
 
     // ---------- Start ----------
     function start() {
@@ -5281,7 +5297,8 @@ body:has(#snapshot-hinweis:not([hidden])) .pane[data-pane="radsat"].wk {
         if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
         document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
         wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
-        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+        window.removeEventListener('resize', groesseGeaendert); window.removeEventListener('orientationchange', gedreht);
+        abgebaut = true; filmStopp(); clearInterval(uhr); clearTimeout(bewegUhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 

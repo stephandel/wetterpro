@@ -370,7 +370,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
 /* Zeitleiste unten */
 .wk-zeit { background: var(--wk-zeit); padding: 6px 10px 10px; border-top: 0.5px solid var(--wk-rand); }
 .wk-regler { display: flex; align-items: center; gap: 2px; }
-.wk-tk { width: 40px; height: 40px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+.wk-tk { width: 44px; height: 44px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
 .wk-tk svg { width: 18px; height: 18px; display: block; }
 .wk-tk:disabled { opacity: .35; }
 .wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
@@ -498,7 +498,7 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
     <section class="block wrap" id="s-himmel" data-nav="Himmel"></section>
     <section class="block wrap" id="s-luft" data-nav="Wind &amp; Luft"></section>
     <section class="block" id="s-karten" data-nav="Karten"></section>
-    <section class="block" id="s-radsat" data-nav="Rad/Sat"></section>
+    <section class="block" id="s-radsat" data-nav="Radar"></section>
     <footer class="fuss wrap" id="fuss"></footer>
   </main>
 </div>
@@ -2914,13 +2914,14 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
     });
 
     function groesseGeaendert() {
-      if (!map) return;
+      if (!map || abgebaut) return;                   // P-3101: späte Uhren (Drehen, Vollbild) treffen sonst die entfernte Karte
       map.invalidateSize({ animate: false });
       if (OFFLINE) offlineAnsicht(false);
       ticks(); hinweisSetzen();
     }
     window.addEventListener('resize', groesseGeaendert);
-    window.addEventListener('orientationchange', function () { setTimeout(groesseGeaendert, 300); });
+    function gedreht() { setTimeout(groesseGeaendert, 300); }
+    window.addEventListener('orientationchange', gedreht);
 
     // ---------- Start ----------
     function start() {
@@ -2981,7 +2982,8 @@ section.block > header p { margin:0; color:var(--dim); font-size:14px; max-width
         if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
         document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
         wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
-        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+        window.removeEventListener('resize', groesseGeaendert); window.removeEventListener('orientationchange', gedreht);
+        abgebaut = true; filmStopp(); clearInterval(uhr); clearTimeout(bewegUhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 
