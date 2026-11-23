@@ -1819,9 +1819,23 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
   }
 
-  // Vorhersage holen. Klappt Open-Meteo nicht (z. B. in der Artefakt-Ansicht ohne Netz),
-  // kommt der gespeicherte Stand aus snapshot/<ortId>.json.
-  // Zum Testen der Offline-Ansicht: index.html?offline=1
+  // Zuletzt geladener Stand je Ort im Browserspeicher (wpma-letzt), für den Start ohne Netz.
+  // Höchstens 5 Orte; älter als 7 Tage zählt nicht mehr (die Vorhersage reicht 8 Tage).
+  var LETZT_MAX_MS = 7 * 86400000;
+  function letztMerken(ort, modell, j, luft) {
+    var alle = (WP.merk && WP.merk('letzt')) || {};
+    alle[ort.id] = { stand: Date.now(), modell: modell, j: j, luft: luft || null };
+    Object.keys(alle).sort(function (a, b) { return alle[b].stand - alle[a].stand; }).slice(5).forEach(function (k) { delete alle[k]; });
+    if (WP.merk) WP.merk('letzt', alle);
+  }
+  function letzterStand(ort) {
+    var l = ((WP.merk && WP.merk('letzt')) || {})[ort.id];
+    return l && l.j && Date.now() - l.stand < LETZT_MAX_MS ? l : null;
+  }
+
+  // Vorhersage holen. Klappt Open-Meteo nicht (kein Netz), kommt zuerst der zuletzt auf diesem Gerät geladene Stand,
+  // sonst der gespeicherte Stand aus snapshot/<ortId>.json (z. B. in der Artefakt-Ansicht).
+  // Zum Testen der Offline-Ansicht: index.html?offline=1 (nur Snapshot)
   var NUR_SNAPSHOT = /[?&]offline/.test(location.search);
   WP.holeVorhersage = function (ort) {
     var modell = WP.modell().id;
@@ -1830,8 +1844,17 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
       WP.OFFLINE = false;
       var daten = WP.aufbereiten(j, ort);
       daten.modell = modell;
-      return mitLuft(daten, holeJson(WP.luftUrl(ort)));
+      return mitLuft(daten, holeJson(WP.luftUrl(ort)).then(function (l) { letztMerken(ort, modell, j, l); return l; }, function (f) { letztMerken(ort, modell, j, null); throw f; }));
     }).catch(function (e) {
+      var l = NUR_SNAPSHOT ? null : letzterStand(ort);
+      if (l) {
+        WP.OFFLINE = true;
+        var daten = WP.aufbereiten(l.j, ort);
+        daten.snapshot = true;
+        daten.modell = l.modell;
+        daten.stand = l.stand;
+        return l.luft ? mitLuft(daten, Promise.resolve(l.luft)) : (daten.luft = null, daten);
+      }
       return holeJson(WP.SNAP + ort.id + '.json').then(function (j) {
         WP.OFFLINE = true;
         var daten = WP.aufbereiten(j, ort);
@@ -2169,7 +2192,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
       var sh = document.getElementById('snapshot-hinweis');
       sh.hidden = !daten.snapshot;
       if (daten.snapshot) sh.textContent = 'Gespeicherter Stand vom ' + new Date(daten.stand).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr (kein Netz)' +
-        (WP.zustand.modell !== 'best_match' ? ' – nur als beste Mischung, nicht als ' + WP.modell().kurz : '');
+        (WP.zustand.modell !== daten.modell ? ' – nur als ' + WP.modell(daten.modell).name + ', nicht als ' + WP.modell().kurz : '');
       unterSetzen();
       messeKopf();
       REITER.forEach(function (r) { if (WP.module[r.id] && WP.module[r.id].zeichnen) { try { WP.module[r.id].zeichnen(pane(r.id), daten); } catch (e) { console.error(r.id, e); } } });
@@ -2512,6 +2535,21 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   var STUFE = { minor: ['Wetterwarnung', 1], moderate: ['Markante Wetterwarnung', 2], severe: ['Unwetterwarnung', 3], extreme: ['Extreme Unwetterwarnung', 4] };
   var warnD = {};
   function inDeutschland(o) { return o.lat > 47.2 && o.lat < 55.1 && o.lon > 5.8 && o.lon < 15.1; }
+  // Gleiche Warnung (Stufe und Ereignis), deren Zeiten sich überschneiden oder lückenlos anschließen: eine Karte über den ganzen Zeitraum.
+  // Der DWD gibt eine laufende Warnung oft in zwei Meldungen heraus (z. B. „jetzt bis 23 Uhr“ und „23 bis 5 Uhr“).
+  var zeitMs = function (t, sonst) { var v = t ? Date.parse(t) : NaN; return isNaN(v) ? sonst : v; };
+  WP.warnungenZusammenfassen = function (liste) {
+    var gruppen = [];
+    liste.slice().sort(function (x, y) { return zeitMs(x.onset, 0) - zeitMs(y.onset, 0); }).forEach(function (a) {
+      var art = a.severity + '|' + (a.event_de || a.headline_de);
+      var g = gruppen.filter(function (g) { return g.art === art && zeitMs(a.onset, 0) <= zeitMs(g.a.expires, Infinity); })[0];
+      if (!g) { gruppen.push({ art: art, a: Object.assign({}, a, { teile: [a] }) }); return; }
+      g.a.teile.push(a);
+      if (!a.expires) g.a.expires = null;
+      else if (g.a.expires && Date.parse(a.expires) > Date.parse(g.a.expires)) g.a.expires = a.expires;
+    });
+    return gruppen.map(function (g) { return g.a; });
+  };
   WP.warnungen = function (ort) {
     if (!inDeutschland(ort)) return Promise.resolve([]);
     var k = ort.lat.toFixed(2) + ',' + ort.lon.toFixed(2), m = warnD[k];
@@ -2519,7 +2557,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     var v = fetch('https://api.brightsky.dev/alerts?lat=' + ort.lat + '&lon=' + ort.lon + '&tz=Europe/Berlin').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (j) {
         var jetzt = Date.now();
-        return (j.alerts || []).filter(function (a) { return a && a.status !== 'test' && a.response_type !== 'allclear' && STUFE[a.severity] && a.headline_de && (!a.expires || Date.parse(a.expires) > jetzt); })
+        return WP.warnungenZusammenfassen((j.alerts || []).filter(function (a) { return a && a.status !== 'test' && a.response_type !== 'allclear' && STUFE[a.severity] && a.headline_de && (!a.expires || Date.parse(a.expires) > jetzt); }))
           .sort(function (x, y) { return STUFE[y.severity][1] - STUFE[x.severity][1]; }).slice(0, 4);
       }).catch(function () { delete warnD[k]; return []; });
     warnD[k] = { zeit: Date.now(), v: v };
@@ -2543,8 +2581,13 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
       box.querySelectorAll('[data-warn]').forEach(function (k) {
         k.addEventListener('click', function () {
           var a = liste[+k.dataset.warn];
+          // Zusammengefasste Warnung: jeder Teil mit eigenem Zeitraum, gleiche Texte nur einmal
+          var teile = a.teile || [a], gesehen = {}, text = teile.map(function (t) {
+            var k = (t.description_de || '') + '|' + (t.instruction_de || ''); if (gesehen[k]) return ''; gesehen[k] = 1;
+            return (teile.length > 1 ? '<p class="warn-art">' + esc(zeitraum(t)) + '</p>' : '') + '<p>' + esc(t.description_de || '') + '</p>' + (t.instruction_de ? '<p>' + esc(t.instruction_de) + '</p>' : '');
+          }).join('');
           WP.blattAuf('warnung', '<div class="kachel warn-text"><p class="warn-art">' + STUFE[a.severity][0] + (a.event_de ? ': ' + esc(a.event_de) : '') + '</p><h3>' + esc(a.headline_de) + '</h3><p>' + esc(zeitraum(a)) + '</p>' +
-            '<p>' + esc(a.description_de || '') + '</p>' + (a.instruction_de ? '<p>' + esc(a.instruction_de) + '</p>' : '') + '</div>' +
+            text + '</div>' +
             '<div class="hinweis">Quelle: Deutscher Wetterdienst, über Bright Sky.</div>', { titel: 'Wetterwarnung' });
         });
       });
@@ -2573,9 +2616,11 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   // ---------- Aktuell ----------
   function aktuellHtml(d) {
     var a = d.aktuell, t = WP.zeitTeile(a.zeit);
+    // Gespeicherter Stand von einem früheren Tag: Datum statt „Aktuell“, damit die alte Messung nicht als jetzt gilt
+    var alt = t && t.datum !== WP.jetzt(d).datum;
     return '<div class="wx-aktuell">' +
       '<div class="wx-akt-l">' +
-        '<div class="wx-lab"><span>Aktuell</span>' + (t ? t.hm : '') + '</div>' +
+        '<div class="wx-lab"><span>' + (alt ? 'Stand' : 'Aktuell') + '</span>' + (t ? (alt ? t.dt + ' ' : '') + t.hm : '') + '</div>' +
         sym(a.code, a.istTag) +
         '<div class="wx-temp">' + rund(a.temp) + '°C</div>' +
         '<div class="wx-rg">' + tropfen() + '<span>' + WP.dez(a.regen) + ' <small>mm/h</small></span></div>' +
@@ -2596,9 +2641,9 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
 
   // ---------- Stundenspalten ----------
   function stundenHtml(d) {
-    // Wie im Original: Spalten zu 01:00, 07:00, 13:00, 19:00 – beginnend mit der letzten vor „jetzt"
+    // Wie im Original: Spalten zu 01:00, 07:00, 13:00, 19:00 – beginnend mit der laufenden oder nächsten, nie mit einer vergangenen
     var out = '', n = 0, start = d.jetztIdx;
-    while (start > 0 && WP.zeitTeile(d.stunden[start].zeit).stunde % 6 !== 1) start--;
+    while (start < d.stunden.length - 1 && WP.zeitTeile(d.stunden[start].zeit).stunde % 6 !== 1) start++;
     for (var i = start; i < d.stunden.length && n < 12; i += 6, n++) {
       var s = d.stunden[i], t = WP.zeitTeile(s.zeit);
       out += '<div class="wx-stunde">' +
@@ -2629,7 +2674,9 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     '</div>';
   }
   function tageHtml(d) {
-    return '<div class="wx-tage">' + d.tage.map(function (t, i) { return tagZeile(t, i, d); }).join('') + '</div>';
+    // Vergangene Tage (z. B. aus einem gespeicherten Stand von gestern) weglassen; data-tag bleibt der Index in d.tage
+    var heute = WP.jetzt(d).datum;
+    return '<div class="wx-tage">' + d.tage.map(function (t, i) { return t.datum < heute ? '' : tagZeile(t, i, d); }).join('') + '</div>';
   }
 
   // ---------- Tagesdetail ----------
@@ -6780,6 +6827,29 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   var NEU_MS = 10 * 60000;
 
   var liste = null, heidelberg = [], werte = {}, jetztWerte = null, geladen = 0, filter = WP.merk('stationen-filter') || 'alle', pane = null;
+  // Zuletzt geladene Werte (wpma-stationen-letzt): ohne Netz zeigt der Reiter sie mit ihrem Stand statt leerer Platzhalter
+  var ohneNetz = false, LETZT_MAX_MS = 7 * 86400000;
+  (function () {
+    var l = WP.merk('stationen-letzt');
+    if (!l || typeof l !== 'object' || !(Date.now() - l.stand < LETZT_MAX_MS)) return;   // ohne Datum oder älter als 7 Tage: nicht zeigen
+    Object.keys(l.werte || {}).forEach(function (k) { if (l.werte[k] && !l.werte[k].fehlt) werte[k] = Object.assign(l.werte[k], { alt: true }); });
+    if (l.jetzt) jetztWerte = l.jetzt;
+  })();
+  function letztMerken() {
+    var w = {}; Object.keys(werte).forEach(function (k) { if (!werte[k].fehlt) w[k] = werte[k]; });
+    WP.merk('stationen-letzt', { stand: Date.now(), werte: w, jetzt: jetztWerte });
+  }
+  // Abruf gescheitert: Station ohne alten Wert bekommt den Zustand „fehlt“ statt ewig zu laden
+  function fehlt(stationen) {
+    ohneNetz = true;
+    stationen.forEach(function (s) { if (!werte[s.id]) werte[s.id] = { art: s.art, fehlt: true }; });
+    aktualisieren(); offlineZeigen();
+  }
+  function offlineZeigen() {
+    var h = pane && pane.querySelector('.st-offline'); if (!h) return;
+    h.hidden = !ohneNetz;
+    h.textContent = (navigator.onLine === false ? 'Kein Netz.' : 'Kein Netz oder Quelle nicht erreichbar.') + ' Du siehst die zuletzt geladenen Werte mit ihrem Stand.';
+  }
 
   function listeLaden() {
     if (liste) return Promise.resolve(liste);
@@ -6809,11 +6879,11 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     return eigen;
   }
   function dwdHolen(s) {
-    return json(BRIGHTSKY + '?dwd_station_id=' + dwdId(s)).then(function (j) { werte[s.id] = { art: 'dwd', w: dwdEigen(j), ms: Date.parse((j.weather || {}).timestamp) }; });
+    return json(BRIGHTSKY + '?dwd_station_id=' + dwdId(s)).then(function (j) { werte[s.id] = { art: 'dwd', w: dwdEigen(j), ms: Date.parse((j.weather || {}).timestamp) }; }, function (e) { fehlt([s]); throw e; });
   }
   function jetztHolen(dwd) {
     var ids = dwd.slice().sort(function (a, b) { return (a.id === 'dwd-05906' ? -1 : b.id === 'dwd-05906' ? 1 : a.km - b.km); }).map(dwdId);
-    return json(BRIGHTSKY + '?dwd_station_id=' + ids.join(',')).then(function (j) { jetztWerte = j; });
+    return json(BRIGHTSKY + '?dwd_station_id=' + ids.join(',')).then(function (j) { jetztWerte = j; }, function (e) { ohneNetz = true; offlineZeigen(); throw e; });
   }
   function pegelHolen(pegel) {
     var uuids = pegel.map(function (s) { return PEGEL_UUID[s.id]; }).filter(Boolean);
@@ -6826,21 +6896,21 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
         werte[s.id] = { art: 'pegel', w: c.value, q: q && q.currentMeasurement ? q.currentMeasurement.value : null, ms: Date.parse(c.timestamp), mnw: c.stateMnwMhw, hsw: c.stateNswHsw,
           mw: ((w.characteristicValues || []).filter(function (k) { return k.shortname === 'MW'; })[0] || {}).value };
       });
-    });
+    }, function (e) { fehlt(pegel); throw e; });
   }
   function luftNr(s) { var m = /Station-ID (\d+)/.exec(s.quelle_api || ''); return m ? m[1] : null; }
   function luftHolen(s) {
     var n = luftNr(s); if (!n) return Promise.resolve();
-    return WP.worker.holen('/stationen/luft?station=' + n).then(function (j) {
+    return WP.worker.holen('/stationen/luft?station=' + n).catch(function (e) { fehlt([s]); throw e; }).then(function (j) {
       var d = (j.data || {})[n] || {}, schl = Object.keys(d).sort(), z = schl.length ? d[schl[schl.length - 1]] : null;
       if (!z) { werte[s.id] = { art: 'luft', leer: true }; return; }
       var k = {}; z.slice(3).forEach(function (x) { if (Array.isArray(x)) k[x[0]] = x[1]; });
-      werte[s.id] = { art: 'luft', bis: String(z[0]).slice(11, 16), lqi: z[1], pm10: k[1], o3: k[3], no2: k[5], pm25: k[9] };
+      werte[s.id] = { art: 'luft', geholt: Date.now(), bis: String(z[0]).slice(11, 16), lqi: z[1], pm10: k[1], o3: k[3], no2: k[5], pm25: k[9] };
     });
   }
   function metarHolen(s) {
     var id = s.id.replace(/^metar-/, '').toUpperCase();
-    return WP.worker.holen('/stationen/metar?ids=' + id).then(function (l) {
+    return WP.worker.holen('/stationen/metar?ids=' + id).catch(function (e) { fehlt([s]); throw e; }).then(function (l) {
       var m = (l || [])[0]; if (!m) return;
       werte[s.id] = { art: 'metar', m: m, ms: Date.parse(m.reportTime || '') || (m.obsTime ? m.obsTime * 1000 : NaN) };
     });
@@ -6855,7 +6925,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   var privatListe = [];
   function allesHolen(neu) {
     if (!neu && geladen && Date.now() - geladen < NEU_MS) return Promise.resolve();
-    geladen = Date.now();
+    geladen = Date.now(); ohneNetz = false;
     var dwd = liste.filter(function (s) { return s.art === 'dwd'; }), mitWorker = !!WP.worker.adresse();
     var aufgaben = dwd.map(function (s) { return function () { return dwdHolen(s).then(aktualisieren); }; });
     if (mitWorker) {
@@ -6867,7 +6937,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
       pegelHolen(liste.filter(function (s) { return s.art === 'pegel'; })).then(aktualisieren, function () { }),
       privatHolen().then(function (l) { privatListe = l; listeZeichnen(); }),
       nacheinander(aufgaben, 4)
-    ]);
+    ]).then(letztMerken);
   }
 
   // ---------- Darstellung ----------
@@ -6886,6 +6956,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     }
     if ((s.art === 'luft' || s.art === 'metar') && !mitWorker) return { werte: '', zeit: 'Kommt über den Bildspeicher, der noch nicht eingerichtet ist.' };
     if (!v) return { werte: '<span class="st-lade skeleton"></span>', zeit: '' };
+    if (v.fehlt) return { werte: '<span class="st-leise">' + (navigator.onLine === false ? 'Kein Netz' : 'Kein Netz oder Quelle nicht erreichbar') + ' – noch keine gespeicherten Werte</span>', zeit: '' };
     if (s.art === 'dwd') {
       var w = v.w;
       return { werte: [wert('Temperatur', zahl(w.temperature, 1, '°C')), wert('Feuchte', zahl(w.relative_humidity, 0, '%')), wert('Wind', wind(w.wind_speed_10, w.wind_gust_speed_10, w.wind_direction_10)),
@@ -6901,7 +6972,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     if (s.art === 'luft') {
       if (v.leer) return { werte: '<span class="st-leise">Gerade keine Messwerte</span>', zeit: '' };
       return { werte: wert('Luft', v.lqi != null && LQI[v.lqi] ? LQI[v.lqi] : null) + wert('NO₂', zahl(v.no2, 0, 'µg/m³')) + wert('PM10', zahl(v.pm10, 0, 'µg/m³')) + wert('PM2,5', zahl(v.pm25, 0, 'µg/m³')) + wert('Ozon', zahl(v.o3, 0, 'µg/m³')),
-        zeit: v.bis ? 'Stundenmittel bis ' + v.bis + ' Uhr (vorläufig)' : '' };
+        zeit: (v.bis ? 'Stundenmittel bis ' + v.bis + ' Uhr (vorläufig)' : '') + (v.alt && v.geholt ? ' · geladen ' + WP.alterText(v.geholt) : '') };
     }
     if (s.art === 'metar') {
       var m = v.m, sicht = m.visib === '6+' || +m.visib >= 6 ? 'über 10 km' : m.visib != null ? dez(+m.visib * 1.609, 1) + ' km' : null;
@@ -6951,7 +7022,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
   }
   function zeichnen() {
     if (!pane) return;
-    pane.innerHTML = '<div class="st-jetzt-platz"></div><div class="st-filter" role="radiogroup" aria-label="Stationen auswählen">' + FILTER.map(function (f) {
+    pane.innerHTML = '<div class="hinweis st-offline" role="status" hidden></div><div class="st-jetzt-platz"></div><div class="st-filter" role="radiogroup" aria-label="Stationen auswählen">' + FILTER.map(function (f) {
       return '<button type="button" class="chip' + (f[0] === filter ? ' aktiv' : '') + '" role="radio" aria-checked="' + (f[0] === filter) + '" data-filter="' + f[0] + '">' + f[1] + '</button>';
     }).join('') + '</div><div class="st-liste"><div class="st-kachel skeleton"></div><div class="st-kachel skeleton"></div></div><div class="st-ende"></div>';
     pane.querySelector('.st-filter').addEventListener('click', function (e) {
@@ -6962,7 +7033,7 @@ button.li-band:active { opacity: .6; transform: scale(.98); }
     });
     WP.warnungZeigen(pane, WP.MANNHEIM);
     listeLaden().then(function () {
-      jetztZeichnen(); listeZeichnen();
+      jetztZeichnen(); listeZeichnen(); offlineZeigen();
       pane.querySelector('.st-ende').innerHTML = heidelbergHtml() + '<div class="hinweis">Entfernung von der Stadtmitte Mannheim. Quellen: Deutscher Wetterdienst (über Bright Sky), PEGELONLINE (WSV), Umweltbundesamt mit Daten der Länder, aviationweather.gov.' +
         (WP.worker.adresse() ? '' : ' Luftdaten und Flugwetter kommen über den Bildspeicher und fehlen, solange er nicht eingerichtet ist.') + '</div>';
       return allesHolen(false);
